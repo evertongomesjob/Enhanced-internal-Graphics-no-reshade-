@@ -24,16 +24,17 @@ files/
       renderpassraytracing.xml
 ```
 
-Install through your mod manager as a **file-based (RAW) mod** with a `files` folder at the mod root, like the original package.
+The mod root must contain a `files` folder (see tree above), same as the original package.
 
 ---
 
-## How to use (players)
+## Install (JSON Mod Manager)
 
-1. **Back up** your mod profile and disable other graphics mods that override the same XMLs.
-2. Drop this folder into your **Crimson mod manager** mod directory (path depends on the tool you use).
-3. **Enable this mod** (or resolve conflicts if another mod touches the same files).
-4. After a future game update, see “After a game patch” below.
+1. Download the **Release ZIP** and extract it somewhere.
+2. Place the **extracted mod folder** into the **mods folder** used by the JSON Mod Manager.
+3. **Enable** the mod in the manager, click **Apply mods**, then start the game.
+
+**Tips:** back up your mod profile first. If another mod overrides the same XMLs, resolve conflicts (only one “winner” per file). After a big game patch, see **After a game patch** below.
 
 ---
 
