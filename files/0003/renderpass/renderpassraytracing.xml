@@ -1,0 +1,264 @@
+﻿<RenderPass Name="Raytracing" Condition="Raytracing">
+	<Define Name="USE_PRE_EXPOSURE" Value="0" CacheSuffix="prexp" TargetShaders="all" />
+
+	<Pipeline Pass="ClosestHitPS5" BuildTriggerType="Required" Condition="PS5&ConditionalTrinity">
+		<Permutation>
+			<Element Name="HitGroupGeometryType" EnableMacroName="RAYTRACING_HIT_GROUP_GEOMETRY_TYPE" EnumType="Integer" Count="4" CacheSuffix="hggt" TargetShaders="all" />
+		</Permutation>
+		<FunctionShader Filename="RaytracingHitGroup.hlsl" EntryPoint="ClosestHit" HitGroupShader="ClosestHit" Library="Raytracing"/>
+	</Pipeline>
+
+	<Pipeline Pass="AnyHitPS5" BuildTriggerType="Required" Condition="PS5&ConditionalTrinity">
+		<Permutation>
+			<Element Name="HitGroupGeometryType" EnableMacroName="RAYTRACING_HIT_GROUP_GEOMETRY_TYPE" EnumType="Integer" Count="4" CacheSuffix="hggt" TargetShaders="all" />
+		</Permutation>
+		<FunctionShader Filename="RaytracingHitGroup.hlsl" EntryPoint="AnyHit" HitGroupShader="AnyHit" Library="Raytracing"/>
+	</Pipeline>
+
+	<Pipeline Pass="MissShaderPS5" BuildTriggerType="Required" Condition="PS5&ConditionalTrinity">
+		<FunctionShader Filename="RaytracingHitGroup.hlsl" EntryPoint="Miss" HitGroupShader="Miss" Library="Raytracing"/>
+	</Pipeline>
+
+	<!-- Hit Group -->
+	<Pipeline Pass="DefaultHitGroup" BuildTriggerType="Required" Condition="D3D12|Metal">
+		<Define Name="RAYTRACING_DEFAULT_HIT_GROUP" Value="1" CacheSuffix="rdhg" TargetShaders="all" />
+		<RaytracingShaders Filename="RaytracingHitGroup.hlsl" PayloadSize="128" AttributeSize="12" HitGroup="DefaultHitGroup" AnyHit="DefaultAnyHit" ClosestHit="DefaultClosestHit" Miss="DefaultMiss"/>
+	</Pipeline>
+	
+	<!--<Pipeline Pass="MaterialHitGroup">
+		<RaytracingShaders Filename="RaytracingHitGroup.hlsl" HitGroup="MaterialHitGroup"/>
+	</Pipeline>-->
+
+	<!--<Pipeline Pass="TerrainMeshHitGroup" BuildTriggerType="Required">
+		<Define Name="HIT_GROUP_TERRAIN_MESH" Value="1" CacheSuffix="hitm" TargetShaders="all" />
+		<RaytracingShaders Filename="TerrainMesh.hlsl" HitGroup="TerrainMeshHitGroup" AnyHit="TerrainMeshAnyHit" ClosestHit="TerrainMeshClosestHit" ExportsAssociation="TerrainMeshExportsAssociation"/>
+	</Pipeline>-->
+
+	<!-- Voxel Global Illumination -->
+	<Pipeline Pass="RayTraceLocalLights" Condition="ConditionalTrinity">
+		<Permutation>
+			<Element Name="TraceManyLightsDownsampleType" EnableMacroName="TRACE_MANY_LIGHTS_DOWNSAMPLE_TYPE" EnumType="Integer" Default="2" Count="3" CacheSuffix="mldst" TargetShaders="all" Condition="Windows|Metal" />
+			<Element Name="UseReservoirSampling" EnableMacroName="USE_RESERVOIR_SAMPLING" EnumType="Bool" Default="False" CacheSuffix="urs" TargetShaders="all" />
+			<Element Name="UseTemporalResampling" EnableMacroName="USE_TEMPORAL_RESAMPLING" EnumType="Bool" Default="False" CacheSuffix="utr" TargetShaders="all" />
+			<Element Name="UseSpatialResampling" EnableMacroName="USE_SPATIAL_RESAMPLING" EnumType="Bool" Default="False" CacheSuffix="usr" TargetShaders="all" />
+			<Element Name="UseSeparateSamplingPass" EnableMacroName="USE_SEPARATE_SAMPLING_PASS" EnumType="Bool" Default="False" CacheSuffix="ussp" TargetShaders="all" />
+			<Element Name="ComputeShaderNumThreadsEnum" EnableMacroName="COMPUTE_SHADER_NUM_THREADS_ENUM" EnumType="Integer" Default="0" Count="5" CacheSuffix="csnt" TargetShaders="cs" />
+			<Element Name="InlineRaytracing" EnableMacroName="INLINE_RAYTRACING" EnumType="Bool" Default="False" Material="False" CacheSuffix="irt" TargetShaders="all">
+				<Overriding Value="False" StateOverrideMethod="Overwrite">
+					<RaytracingShaders Filename="VoxelGlobalIlluminationRaytracing.hlsl" RayGeneration="RayTraceLocalLightsRayGenerationRG"/>
+				</Overriding>
+				<Overriding Value="True" StateOverrideMethod="Overwrite">
+					<ComputeShader Filename="VoxelGlobalIlluminationRaytracing.hlsl" EntryPoint="RayTraceLocalLightsRayGenerationCS" Library="Raytracing"/>
+				</Overriding>
+			</Element>
+		</Permutation>
+	</Pipeline>
+
+	<Pipeline Pass="RayTraceLocalLightReservoirs" Condition="ConditionalTrinity">
+		<Permutation>
+			<Element Name="TraceManyLightsDownsampleType" EnableMacroName="TRACE_MANY_LIGHTS_DOWNSAMPLE_TYPE" EnumType="Integer" Default="2" Count="3" CacheSuffix="mldst" TargetShaders="all" Condition="Windows|Metal" />
+			<Element Name="ComputeShaderNumThreadsEnum" EnableMacroName="COMPUTE_SHADER_NUM_THREADS_ENUM" EnumType="Integer" Default="0" Count="5" CacheSuffix="csnt" TargetShaders="cs" />
+			<Element Name="InlineRaytracing" EnableMacroName="INLINE_RAYTRACING" EnumType="Bool" Default="False" Material="False" CacheSuffix="irt" TargetShaders="all">
+				<Overriding Value="False" StateOverrideMethod="Overwrite">
+					<RaytracingShaders Filename="VoxelGlobalIlluminationRaytracing.hlsl" RayGeneration="RayTraceLocalLightReservoirsRayGenerationRG"/>
+				</Overriding>
+				<Overriding Value="True" StateOverrideMethod="Overwrite">
+					<ComputeShader Filename="VoxelGlobalIlluminationRaytracing.hlsl" EntryPoint="RayTraceLocalLightReservoirsRayGenerationCS" Library="Raytracing"/>
+				</Overriding>
+			</Element>
+		</Permutation>
+	</Pipeline>
+
+	<!-- Raytracing -->
+	<Pipeline Pass="RaytracingPrimaryRay" Condition="ConditionalTrinity">
+		<Permutation>
+			<Element Name="RaytracingDebugMode" EnableMacroName="ENABLE_RAYTRACING_DEBUG_MODE" EnumType="Bool" Default="False" CacheSuffix="rdm" TargetShaders="all" />
+			<Element Name="ComputeShaderNumThreadsEnum" EnableMacroName="COMPUTE_SHADER_NUM_THREADS_ENUM" EnumType="Integer" Default="0" Count="5" CacheSuffix="csnt" TargetShaders="cs" />
+			<Element Name="RaytracingSeparateAlphaRays" EnableMacroName="USE_SEPARATE_ALPHA_RAYS" EnumType="Bool" Default="True" CacheSuffix="sar" TargetShaders="cs" />
+			<Element Name="InlineRaytracing" EnableMacroName="INLINE_RAYTRACING" EnumType="Bool" Default="False" Material="False" CacheSuffix="irt" TargetShaders="all">
+				<Overriding Value="False" StateOverrideMethod="Overwrite">
+					<RaytracingShaders Filename="RaytracingPrimaryRay.hlsl" RayGeneration="RaytracingPrimaryRayRG"/>
+				</Overriding>
+				<Overriding Value="True" StateOverrideMethod="Overwrite">
+					<ComputeShader Filename="RaytracingPrimaryRay.hlsl" EntryPoint="RaytracingPrimaryRayCS" Library="Raytracing"/>
+				</Overriding>
+			</Element>
+		</Permutation>
+	</Pipeline>
+	<Pipeline Pass="RaytracingPrimaryRayAlphaTested" Condition="ConditionalTrinity">
+		<Permutation>
+			<Element Name="RaytracingDebugMode" EnableMacroName="ENABLE_RAYTRACING_DEBUG_MODE" EnumType="Bool" Default="False" CacheSuffix="rdm" TargetShaders="all" />
+			<Element Name="ComputeShaderNumThreadsEnum" EnableMacroName="COMPUTE_SHADER_NUM_THREADS_ENUM" EnumType="Integer" Default="0" Count="5" CacheSuffix="csnt" TargetShaders="cs" />
+			<Element Name="InlineRaytracing" EnableMacroName="INLINE_RAYTRACING" EnumType="Bool" Default="False" Material="False" CacheSuffix="irt" TargetShaders="all">
+				<!--<Overriding Value="False" StateOverrideMethod="Overwrite">
+					<RaytracingShaders Filename="RaytracingPrimaryRay.hlsl" RayGeneration="RaytracingPrimaryRayAlphaTestedRG"/>
+				</Overriding>-->
+				<Overriding Value="True" StateOverrideMethod="Overwrite">
+					<ComputeShader Filename="RaytracingPrimaryRay.hlsl" EntryPoint="RaytracingPrimaryRayAlphaTestedCS" Library="Raytracing"/>
+				</Overriding>
+			</Element>
+		</Permutation>
+	</Pipeline>
+	<Pipeline Pass="RaytracingPrimaryRayGeneration" Condition="!PS5">
+		<Permutation>
+			<Element Name="RaytracingDebugMode" EnableMacroName="ENABLE_RAYTRACING_DEBUG_MODE" EnumType="Bool" Default="False" CacheSuffix="rdm" TargetShaders="all" />
+		</Permutation>
+		<RaytracingShaders Filename="RaytracingPrimaryRay.hlsl" RayGeneration="RaytracingPrimaryRayGeneration"/>
+	</Pipeline>
+	<Pipeline Pass="RaytracingPrimaryRayEvaluation" Condition="!PS5">
+		<Permutation>
+			<Element Name="RaytracingDebugMode" EnableMacroName="ENABLE_RAYTRACING_DEBUG_MODE" EnumType="Bool" Default="False" CacheSuffix="rdm" TargetShaders="all" />
+		</Permutation>
+		<ComputeShader Filename="RaytracingPrimaryRayEvaluation.hlsl" EntryPoint="RaytracingPrimaryRayEvaluationCS"/>
+	</Pipeline>
+	<Pipeline Pass="RaytracedSpecular" Condition="D3D12|Metal">
+		<RaytracingShaders Filename="RaytracingTest.hlsl" RayGeneration="SpecularRayGeneration"/>
+	</Pipeline>
+	<Pipeline Pass="RaytracedAmbientOcclusion" Condition="D3D12|Metal">
+		<RaytracingShaders Filename="RaytracingOcclusion.hlsl" RayGeneration="AmbientOcclusionRayGeneration"/>
+	</Pipeline>
+	<Pipeline Pass="RaytracedDirectionalLightShadows" Condition="D3D12|Metal">
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="dws" TargetShaders="all" />
+		<RaytracingShaders Filename="RaytracingShadows.hlsl" RayGeneration="DirectionalLightShadowRayGeneration"/>
+	</Pipeline>
+	<Pipeline Pass="RaytracedDiffuseHitDistance" Condition="ConditionalTrinity">
+		<Permutation>
+			<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="False" CacheSuffix="ds" TargetShaders="all" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="InterleavedMode" EnableMacroName="INTERLEAVED_MODE" EnumType="Integer" Default="2" Count="3" CacheSuffix="intm" TargetShaders="all" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="UsePreGeneratedScreenSpaceRays" EnableMacroName="USE_PRE_GENERATED_SCREEN_SPACE_RAYS" EnumType="Bool" Default="False" CacheSuffix="upssr" TargetShaders="all" />
+			<!--<Element Name="UseRayListBuffer" EnableMacroName="USE_RAY_LIST_BUFFER" EnumType="Bool" Default="False" CacheSuffix="urlb" TargetShaders="all" />-->
+			<!--<Element Name="UsePreGeneratedRays" EnableMacroName="USE_PRE_GENERATED_RAYS" EnumType="Bool" Default="False" CacheSuffix="upgr" TargetShaders="all" />-->
+			<!--<Element Name="UseRayGuiding" EnableMacroName="USE_RAY_GUIDING" EnumType="Bool" Default="False" CacheSuffix="urg" TargetShaders="all" />-->
+			<!--<Element Name="UseRayBinning" EnableMacroName="USE_RAY_BINNING" EnumType="Bool" Default="False" CacheSuffix="urb" TargetShaders="all" />-->
+			<Element Name="ComputeShaderNumThreadsEnum" EnableMacroName="COMPUTE_SHADER_NUM_THREADS_ENUM" EnumType="Integer" Default="0" Count="5" CacheSuffix="csnt" TargetShaders="cs" />
+			<Element Name="InlineRaytracing" EnableMacroName="INLINE_RAYTRACING" EnumType="Bool" Default="False" Material="False" CacheSuffix="irt" TargetShaders="all">
+				<Overriding Value="False" StateOverrideMethod="Overwrite">
+					<RaytracingShaders Filename="RaytracingGlobalIllumination.hlsl" RayGeneration="ImportanceSampledDiffuseRayGeneration" />
+				</Overriding>
+				<Overriding Value="True" StateOverrideMethod="Overwrite">
+					<ComputeShader Filename="RaytracingGlobalIllumination.hlsl" EntryPoint="ImportanceSampledDiffuseRayGenerationCS" Library="Raytracing"/>
+				</Overriding>
+			</Element>
+		</Permutation>
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="ds" TargetShaders="all" Condition="!Native16bitShaderOps"/>
+		<Define Name="INTERLEAVED_MODE" Value="2" CacheSuffix="intm" TargetShaders="all" Condition="!Native16bitShaderOps"/>
+		<Define Name="USE_PRE_GENERATED_RAYS" Value="1" CacheSuffix="upgr" TargetShaders="all" />
+		<Define Name="USE_RAY_BINNING" Value="0" CacheSuffix="urb" TargetShaders="all" />
+	</Pipeline>
+	<Pipeline Pass="RaymarchScreenSpaceSpecularHitDistance">
+		<Permutation>
+			<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="False" CacheSuffix="ds" TargetShaders="all" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="UseDownsampledDepthForScreenSpaceRays" EnableMacroName="USE_DOWNSAMPLED_DEPTH_FOR_SCREEN_SPACE_RAYS" EnumType="Bool" Default="False" CacheSuffix="ddssr" TargetShaders="all" />
+			<Element Name="UseTiledRadianceCache" EnableMacroName="USE_TILED_RADIANCE_CACHE" EnumType="Bool" Default="True" CacheSuffix="utrc" TargetShaders="all" Condition="Windows|Metal" />
+		</Permutation>
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="ds" TargetShaders="all" Condition="!Native16bitShaderOps"/>
+		<ComputeShader Filename="RaytracingSpecularGlobalIllumination.hlsl" EntryPoint="RaymarchScreenSpaceSpecularHitDistanceCS"/>
+	</Pipeline>
+	<Pipeline Pass="RaytracedSpecularHitDistance" Condition="ConditionalTrinity">
+		<Permutation>
+			<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="F" CacheSuffix="ds" TargetShaders="all" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<!--<Element Name="UseDownsampledDepthForScreenSpaceRays" EnableMacroName="USE_DOWNSAMPLED_DEPTH_FOR_SCREEN_SPACE_RAYS" EnumType="Bool" Default="False" CacheSuffix="ddssr" TargetShaders="all" />-->
+			<Element Name="UseTiledRadianceCache" EnableMacroName="USE_TILED_RADIANCE_CACHE" EnumType="Bool" Default="True" CacheSuffix="utrc" TargetShaders="all" Condition="Windows|Metal" />
+			<Element Name="UseSeparateScreenSpaceRays" EnableMacroName="USE_SEPARATE_SCREEN_SPACE_RAYS" EnumType="Bool" Default="False" CacheSuffix="ussr" TargetShaders="all" />
+			<Element Name="UseAdaptiveRayBudget" EnableMacroName="USE_ADAPTIVE_RAY_BUDGET" EnumType="Bool" Default="False" CacheSuffix="uarb" TargetShaders="all" />
+			<Element Name="ComputeShaderNumThreadsEnum" EnableMacroName="COMPUTE_SHADER_NUM_THREADS_ENUM" EnumType="Integer" Default="0" Count="5" CacheSuffix="csnt" TargetShaders="cs" />
+			<Element Name="InlineRaytracing" EnableMacroName="INLINE_RAYTRACING" EnumType="Bool" Default="False" Material="False" CacheSuffix="irt" TargetShaders="all">
+				<Overriding Value="False" StateOverrideMethod="Overwrite">
+					<RaytracingShaders Filename="RaytracingSpecularGlobalIllumination.hlsl" RayGeneration="ImportanceSampledSpecularRayGenerationRG"/>
+				</Overriding>
+				<Overriding Value="True" StateOverrideMethod="Overwrite">
+					<ComputeShader Filename="RaytracingSpecularGlobalIllumination.hlsl" EntryPoint="ImportanceSampledSpecularRayGenerationCS" Library="Raytracing"/>
+				</Overriding>
+			</Element>
+		</Permutation>
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="ds" TargetShaders="all" Condition="!Native16bitShaderOps"/>
+		<Define Name="USE_DOWNSAMPLED_DEPTH_FOR_SCREEN_SPACE_RAYS" Value="1" CacheSuffix="ddssr" TargetShaders="all" />
+	</Pipeline>
+
+	<Pipeline Pass="UpdateRadianceVoxelLightingRaytraced" Condition="ConditionalTextureMSArray&ConditionalTrinity">
+		<Define Name="USE_RAYTRACING" Value="1" CacheSuffix="urt" TargetShaders="all" />
+		<ComputeShader Filename="VoxelGlobalIlluminationRadianceCache.hlsl" EntryPoint="UpdateRadianceVoxelLightingCS" Library="Raytracing"/>
+	</Pipeline>
+
+	<Pipeline Pass="VisualizeRaytracedRadiance" Condition="ConditionalTrinity">
+		<Define Name="USE_RAYTRACING" Value="1" CacheSuffix="urt" TargetShaders="all" />
+		<Permutation>
+			<Element Name="UseSurfelRadiance" EnableMacroName="USE_SURFEL_RADIANCE" EnumType="Bool" Default="False" CacheSuffix="usr" TargetShaders="all" />
+			<Element Name="InlineRaytracing" EnableMacroName="INLINE_RAYTRACING" EnumType="Bool" Default="False" Material="False" CacheSuffix="irt" TargetShaders="all">
+				<Overriding Value="False" StateOverrideMethod="Overwrite">
+					<RaytracingShaders Filename="VoxelGlobalIlluminationRadianceCache.hlsl" RayGeneration="VisualizeRaytracedRadiance" />
+				</Overriding>
+				<Overriding Value="True" StateOverrideMethod="Overwrite">
+					<ComputeShader Filename="VoxelGlobalIlluminationRadianceCache.hlsl" EntryPoint="VisualizeRaytracedRadianceCS" Library="Raytracing" />
+				</Overriding>
+			</Element>
+		</Permutation>
+	</Pipeline>
+
+	<!-- Point Light -->
+	<Pipeline Pass="RaytracedPointLighting" Condition="ConditionalTrinity">
+		<Permutation>
+			<Element Name="InlineRaytracing" EnableMacroName="INLINE_RAYTRACING" EnumType="Bool" Default="False" Material="False" CacheSuffix="irt" TargetShaders="all">
+				<Overriding Value="False" StateOverrideMethod="Overwrite">
+					<RaytracingShaders Filename="RaytracingShadowLighting.hlsl" RayGeneration="RaytracedPointLightingRayGenerationRG"/>
+				</Overriding>
+				<Overriding Value="True" StateOverrideMethod="Overwrite">
+					<ComputeShader Filename="RaytracingShadowLighting.hlsl" EntryPoint="RaytracedPointLightingRayGenerationCS" Library="Raytracing"/>
+				</Overriding>
+			</Element>
+		</Permutation>
+		<!--<RaytracingShaders Filename="RaytracingShadowLighting.hlsl" RayGeneration="RaytracedPointLightingRayGeneration"/>-->
+	</Pipeline>
+
+	<!-- Path Tracing -->
+	<Pipeline Pass="PathTracing" Condition="D3D12">
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="dws" TargetShaders="all" />
+		<RaytracingShaders Filename="RaytracingPathTracing.hlsl" RayGeneration="PathTracingRayGeneration"/>
+	</Pipeline>
+	<Pipeline Pass="PathTracingTemporalReprojection" Condition="D3D12">
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="dws" TargetShaders="all" />
+		<ComputeShader Filename="RaytracingPathTracingReconstruct.hlsl" EntryPoint="TemporalReprojection_CS" />
+	</Pipeline>
+	<Pipeline Pass="ReconstructPathTracing" Condition="D3D12">
+		<Permutation>
+			<Element Name="ReconstructMode" EnableMacroName="RECONSTRUCT_MODE" EnumType="Integer" Default="1" Count="3" CacheSuffix="rm" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="RaytracingPathTracingReconstruct.hlsl" EntryPoint="ReconstructPathTracing"/>
+	</Pipeline>
+
+	<Pipeline Pass="RaytraceBehindMaterials" Condition="D3D12">
+		<RaytracingShaders Filename="RaytracingBehindMaterials.hlsl" RayGeneration="RaytraceBehindMaterials"/>
+	</Pipeline>
+
+	<!-- To avoid render pass change -->
+	<Pipeline Pass="SetDispatchIndirectArguments" CompatibilityFlag="BoundsCheck">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="SetDispatchIndirectArgumentsCS"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="PreBuildRaytracingTLAS">
+	<Pipeline Pass="RaytracingVisibility">
+		<ComputeShader Filename="RaytracingVisibility.hlsl" EntryPoint="RaytracingVisibilityCS" />
+	</Pipeline>
+</RenderPass>
+
+
+<!--
+<RenderPass Name="RaytracingSDFs" Condition="Raytracing">
+	<Permutation>
+		<Element Name="InlineRaytracing" EnableMacroName="INLINE_RAYTRACING" EnumType="Bool" Default="False" CacheSuffix="sir" TargetShaders="rs"/>
+			<Overriding Value="True" BuildTriggerType="Deferred" StateOverrideMethod="Blank"/>
+		</Element>
+	</Permutation>
+	
+	<Pipeline Pass="RaytracingSDFsFullscreen">
+		<Define Name="QUARTER_REPROJECTION" Value="0" CacheSuffix="qr" TargetShaders="rs"/>
+		<RaytracingShaders Filename="RaytracingSDFs.hlsl" PayloadSize="48" AttributeSize="32" RayGeneration="SDFsRaygenShader" HitGroup="SDFsHitGroup" Intersection="SDFsIntersectionShader" AnyHit="SDFsAnyHitShader" ClosestHit="SDFsClosestHitShader" Miss="SDFsMissShader"/>
+	</Pipeline>
+
+	<Pipeline Pass="RaytracingSDFsQuarter">
+		<Define Name="QUARTER_REPROJECTION" Value="1" CacheSuffix="qr" TargetShaders="rs"/>
+		<RaytracingShaders Filename="RaytracingSDFs.hlsl" PayloadSize="48" AttributeSize="32" RayGeneration="SDFsRaygenShader" HitGroup="SDFsHitGroup" Intersection="SDFsIntersectionShader" AnyHit="SDFsAnyHitShader" ClosestHit="SDFsClosestHitShader" Miss="SDFsMissShader"/>
+	</Pipeline>
+</RenderPass>
+-->

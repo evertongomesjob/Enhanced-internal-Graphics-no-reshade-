@@ -1,0 +1,1227 @@
+﻿<FrameBuffer Name="SceneVoxelClipmaps" ForStaticMesh="True">
+</FrameBuffer>
+
+<FrameBuffer Name="ScatteringSDFVoxels">
+</FrameBuffer>
+
+<FrameBuffer Name="ScatteringVoxels">
+</FrameBuffer>
+
+<RenderPass Name="VoxelGlobalIlluminationGenerate">
+	<Define Name="USE_PRE_EXPOSURE_FOR_GI" Value="1" CacheSuffix="prexp" TargetShaders="ps|cs" />
+
+	<Pipeline Pass="ClearStructureCount">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="ClearStructureCountCS"/>
+	</Pipeline>
+	<Pipeline Pass="SetDispatchIndirectArguments" CompatibilityFlag="BoundsCheck">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="SetDispatchIndirectArgumentsCS"/>
+	</Pipeline>
+	<Pipeline Pass="SetDispatchIndirectArgumentsRecursive">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="SetDispatchIndirectArgumentsRecursiveCS"/>
+	</Pipeline>
+	<Pipeline Pass="ClearVoxelsBuffer">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="ClearVoxelsBufferCS"/>
+	</Pipeline>
+	<Pipeline Pass="GenerateInjectList">
+		<Permutation>
+			<Element Name="UpdateRadianceSurfelBased" EnableMacroName="UPDATE_RADIANCE_SURFEL_BASED" EnumType="Bool" Default="False" CacheSuffix="ursb" TargetShaders="cs" />
+			<Element Name="UseSeparateDiffuseTarget" EnableMacroName="USE_SEPARATE_DIFFUSE_TARGET" EnumType="Bool" Default="False" CacheSuffix="usdt" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="GenerateInjectListCS"/>
+	</Pipeline>
+	<Pipeline Pass="AccumulateInjectData">
+		<Permutation>
+			<Element Name="UpdateRadianceSurfelBased" EnableMacroName="UPDATE_RADIANCE_SURFEL_BASED" EnumType="Bool" Default="False" CacheSuffix="ursb" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="AccumulateInjectDataCS"/>
+	</Pipeline>
+	<Pipeline Pass="AccumulateInjectDataSingedDistanceOnly">
+		<Permutation>
+			<Element Name="UpdateRadianceSurfelBased" EnableMacroName="UPDATE_RADIANCE_SURFEL_BASED" EnumType="Bool" Default="False" CacheSuffix="ursb" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="AccumulateInjectDataSingedDistanceOnlyCS"/>
+	</Pipeline>
+	<Pipeline Pass="GenerateHairDualScatteringLUT">
+		<Permutation>
+			<Element Name="UseReducedSampleCount" EnableMacroName="USE_REDUCED_SAMPLE_COUNT" EnumType="Bool" Default="False" CacheSuffix="ursc" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerateHairScattering.hlsl" EntryPoint="GenerateHairDualScatteringLUT_CS"/>
+	</Pipeline>
+	<Pipeline Pass="ClearHairScatteringVoxels">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerateHairScattering.hlsl" EntryPoint="ClearHairScatteringVoxelsCS"/>
+	</Pipeline>
+	<Pipeline Pass="AccumulateInjectDataScatteringSignedDistance">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerateHairScattering.hlsl" EntryPoint="AccumulateInjectDataScatteringSignedDistanceCS"/>
+	</Pipeline>
+	<Pipeline Pass="AccumulateInjectDataHairScattering">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerateHairScattering.hlsl" EntryPoint="AccumulateInjectDataHairScatteringCS"/>
+	</Pipeline>
+	<Pipeline Pass="ClearIncompleteSignedDistanceVoxels">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="ClearIncompleteSignedDistanceVoxelsCS"/>
+	</Pipeline>
+	<Pipeline Pass="InjectLights" CompatibilityFlag="BoundsCheck">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="InjectLightsCS"/>
+	</Pipeline>
+	<Pipeline Pass="InjectLightGroups" CompatibilityFlag="BoundsCheck">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="InjectLightGroupsCS"/>
+	</Pipeline>
+	<Pipeline Pass="CalculateManyLightsBounds" >
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="CalculateManyLightsBoundsCS"/>
+	</Pipeline>
+	<Pipeline Pass="CalculateAverageManyLightsLuminance" CompatibilityFlag="BoundsCheck" >
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="CalculateAverageManyLightsLuminanceCS"/>
+	</Pipeline>
+	<Pipeline Pass="ProcessManyLights">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="ProcessManyLightsCS"/>
+	</Pipeline>
+	<Pipeline Pass="InitSortingData">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="InitSortingDataCS"/>
+	</Pipeline>
+	<Pipeline Pass="InitSortingDataIndirect">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="InitSortingDataIndirectCS"/>
+	</Pipeline>
+	<Pipeline Pass="BitonicPreSortLights">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="BitonicPreSortLightsCS"/>
+	</Pipeline>
+	<Pipeline Pass="BitonicInnerSortLights">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="BitonicInnerSortLightsCS"/>
+	</Pipeline>
+	<Pipeline Pass="BitonicOuterSortLights">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="BitonicOuterSortLightsCS"/>
+	</Pipeline>
+	<Pipeline Pass="BuildLightTreeLevel0">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="BuildLightTreeLevel0CS"/>
+	</Pipeline>
+	<Pipeline Pass="BuildLightTreeInternalLevelsAsRadixTree">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="BuildLightTreeInternalLevelsAsRadixTreeCS"/>
+	</Pipeline>
+	<Pipeline Pass="BuildLightTreeInternalLevels">
+		<ComputeShader Filename="VoxelGlobalIlluminationGenerate.hlsl" EntryPoint="BuildLightTreeInternalLevelsCS"/>
+	</Pipeline>
+	<Pipeline Pass="ClearVoxels">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="ClearVoxelsCS"/>
+	</Pipeline>
+	<Pipeline Pass="ClearVoxelsMerged">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="ClearVoxelsMergedCS"/>
+	</Pipeline>
+	<Pipeline Pass="ClearSurfelIndicesVoxels">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="ClearSurfelIndicesVoxelsCS"/>
+	</Pipeline>
+	<Pipeline Pass="ClearSurfelDataBuffer">
+		<Permutation>
+			<Element Name="ClearRadianceOnly" EnableMacroName="CLEAR_RADIANCE_ONLY" EnumType="Bool" Default="False" CacheSuffix="cro" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="ClearSurfelDataBufferCS"/>
+	</Pipeline>
+	<Pipeline Pass="ReleaseSurfels">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="ReleaseSurfelsCS"/>
+	</Pipeline>
+	<Pipeline Pass="ClearInvalidSignedDistanceVoxels">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="ClearInvalidSignedDistanceVoxelsCS"/>
+	</Pipeline>
+	<Pipeline Pass="DimRadianceVoxels">
+		<Permutation>
+			<Element Name="UpdateRadianceSurfelBased" EnableMacroName="UPDATE_RADIANCE_SURFEL_BASED" EnumType="Bool" Default="False" CacheSuffix="ursb" TargetShaders="cs" />
+		</Permutation>
+		<Define Name="USE_VOXEL_FLAGS" Value="1" CacheSuffix="uvf" TargetShaders="cs" />
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="DimRadianceVoxelsCS"/>
+	</Pipeline>
+	<Pipeline Pass="PadClipmapBorderTexels">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="PadClipmapBorderTexelsCS"/>
+	</Pipeline>
+	<Pipeline Pass="RespondToEnvironmentLightingTransition">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="RespondToEnvironmentLightingTransitionCS"/>
+	</Pipeline>
+	<Pipeline Pass="ReleasePurgedSurfels_288Aligned" BuildTriggerType="Required">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="ReleasePurgedSurfels_288AlignedCS"/>
+	</Pipeline>
+	<Pipeline Pass="ReleasePurgedSurfels_828Aligned" BuildTriggerType="Required">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="ReleasePurgedSurfels_828AlignedCS"/>
+	</Pipeline>
+	<Pipeline Pass="ReleasePurgedSurfels_882Aligned" BuildTriggerType="Required">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="ReleasePurgedSurfels_882AlignedCS"/>
+	</Pipeline>
+	<Pipeline Pass="MigrateSurfels_288Aligned">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="MigrateSurfels_288AlignedCS"/>
+	</Pipeline>
+	<Pipeline Pass="MigrateSurfels_828Aligned">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="MigrateSurfels_828AlignedCS"/>
+	</Pipeline>
+	<Pipeline Pass="MigrateSurfels_882Aligned">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="MigrateSurfels_882AlignedCS"/>
+	</Pipeline>
+	<Pipeline Pass="FillBorderVoxels_288Aligned" BuildTriggerType="Required">
+		<Permutation>
+			<Element Name="UpdateRadianceSurfelBased" EnableMacroName="UPDATE_RADIANCE_SURFEL_BASED" EnumType="Bool" Default="False" CacheSuffix="ursb" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="FillBorderVoxels_288AlignedCS"/>
+	</Pipeline>
+	<Pipeline Pass="FillBorderVoxels_828Aligned" BuildTriggerType="Required">
+		<Permutation>
+			<Element Name="UpdateRadianceSurfelBased" EnableMacroName="UPDATE_RADIANCE_SURFEL_BASED" EnumType="Bool" Default="False" CacheSuffix="ursb" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="FillBorderVoxels_828AlignedCS"/>
+	</Pipeline>
+	<Pipeline Pass="FillBorderVoxels_882Aligned" BuildTriggerType="Required">
+		<Permutation>
+			<Element Name="UpdateRadianceSurfelBased" EnableMacroName="UPDATE_RADIANCE_SURFEL_BASED" EnumType="Bool" Default="False" CacheSuffix="ursb" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="FillBorderVoxels_882AlignedCS"/>
+	</Pipeline>
+	<Pipeline Pass="CopyVoxels_2Aligned">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="CopyVoxels_2AlignedCS"/>
+	</Pipeline>
+	<Pipeline Pass="CopyVoxels_4Aligned">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="CopyVoxels_4AlignedCS"/>
+	</Pipeline>
+	<Pipeline Pass="CopyVoxels_8Aligned">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="CopyVoxels_8AlignedCS"/>
+	</Pipeline>
+	<Pipeline Pass="GenerateMips">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="GenerateMipsCS"/>
+	</Pipeline>
+	<Pipeline Pass="GenerateMipsLastLevel_2Aligned">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="GenerateMipsLastLevel_2AlignedCS"/>
+	</Pipeline>
+	<Pipeline Pass="GenerateMipsLastLevel_4Aligned">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="GenerateMipsLastLevel_4AlignedCS"/>
+	</Pipeline>
+	<Pipeline Pass="GenerateMipsLastLevel_8Aligned">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="GenerateMipsLastLevel_8AlignedCS"/>
+	</Pipeline>
+
+	<Pipeline Pass="GenerateAxisAlignedDistancePass0">
+		<Permutation>
+			<Element Name="InjectCharacterOcclusions" EnableMacroName="INJECT_CHARACTER_OCCLUSIONS" EnumType="Bool" Default="False" CacheSuffix="ico" TargetShaders="cs" />
+			<Element Name="UpdateRadianceSurfelBased" EnableMacroName="UPDATE_RADIANCE_SURFEL_BASED" EnumType="Bool" Default="False" CacheSuffix="ursb" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="GenerateAxisAlignedDistancePass0_CS"/>
+	</Pipeline>
+	<Pipeline Pass="GenerateAxisAlignedDistancePass1">
+		<Permutation>
+			<Element Name="Unroll4" EnableMacroName="AXIS_ALIGNED_DISTANCE_PASS1_UNROLL_4" EnumType="Bool" Default="False" CacheSuffix="u4" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="GenerateAxisAlignedDistancePass1_CS"/>
+	</Pipeline>
+	<Pipeline Pass="GenerateAxisAlignedDistancePass2">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="GenerateAxisAlignedDistancePass2_CS"/>
+	</Pipeline>
+
+	<Pipeline Pass="GenerateAxisAlignedDistanceFromCharacterOcclusionData">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="GenerateAxisAlignedDistanceFromCharacterOcclusionDataCS"/>
+	</Pipeline>
+
+	<Pipeline Pass="PropagateSignedDistance">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="PropagateSignedDistanceCS"/>
+	</Pipeline>
+
+	<Pipeline Pass="InitVoronoiSeeds">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="InitVoronoiSeedsCS"/>
+	</Pipeline>
+	<Pipeline Pass="JumpFloodVoronoiDiagrams">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="JumpFloodVoronoiDiagramsCS"/>
+	</Pipeline>
+	<Pipeline Pass="GenerateDistanceFields">
+		<ComputeShader Filename="VoxelGlobalIlluminationProcess.hlsl" EntryPoint="GenerateDistanceFieldsCS"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="VoxelGlobalIlluminationRender" FrameBuffer="SceneDepth">
+	<Define Name="USE_PRE_EXPOSURE_FOR_GI" Value="1" CacheSuffix="prexp" TargetShaders="ps|cs" />
+
+	<Pipeline Pass="GenerateDiffuseRays">
+		<Permutation>
+			<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="True" CacheSuffix="ds" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="InterleavedMode" EnableMacroName="INTERLEAVED_MODE" EnumType="Integer" Default="2" Count="3" CacheSuffix="intm" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="UseRayGuiding" EnableMacroName="USE_RAY_GUIDING" EnumType="Bool" Default="True" CacheSuffix="urg" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="UseRaytracingHitResult" EnableMacroName="USE_RAYTRACING_HIT_RESULT" EnumType="Bool" Default="True" CacheSuffix="rhr" TargetShaders="cs" />
+			<Element Name="UsePreGeneratedScreenSpaceRays" EnableMacroName="USE_PRE_GENERATED_SCREEN_SPACE_RAYS" EnumType="Bool" Default="False" CacheSuffix="upssr" TargetShaders="cs" />
+			<!--<Element Name="UseRayBinning" EnableMacroName="USE_RAY_BINNING" EnumType="Bool" Default="False" CacheSuffix="urb" TargetShaders="cs" />-->
+			<Element Name="UseTiledRadianceCache" EnableMacroName="USE_TILED_RADIANCE_CACHE" EnumType="Bool" Default="True" CacheSuffix="utrc" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="EnableBRDFWeights" EnableMacroName="ENABLE_BRDF_WEIGHTS" EnumType="Bool" Default="True" CacheSuffix="bw" TargetShaders="cs" />
+		</Permutation>
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="ds" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<Define Name="INTERLEAVED_MODE" Value="2" CacheSuffix="intm" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<Define Name="IS_SEPARATE_RAY_GENERATION_PASS" Value="1" CacheSuffix="srgp" TargetShaders="cs" />
+		<Define Name="USE_RAY_BINNING" Value="0" CacheSuffix="urb" TargetShaders="cs" />
+		<ComputeShader Filename="VoxelGlobalIlluminationDiffuseGI.hlsl" EntryPoint="GenerateDiffuseRaysCS"/>
+	</Pipeline>
+
+	<Pipeline Pass="RaymarchDiffuseHitDistance" Condition="Windows|Metal">
+		<Permutation>
+			<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="True" CacheSuffix="ds" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="InterleavedMode" EnableMacroName="INTERLEAVED_MODE" EnumType="Integer" Default="2" Count="3" CacheSuffix="intm" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<!--<Element Name="UsePreGeneratedRays" EnableMacroName="USE_PRE_GENERATED_RAYS" EnumType="Bool" Default="False" CacheSuffix="upgr" TargetShaders="cs" />-->
+			<Element Name="UseRayGuiding" EnableMacroName="USE_RAY_GUIDING" EnumType="Bool" Default="False" CacheSuffix="urg" TargetShaders="cs" />
+			<!--<Element Name="UseRayBinning" EnableMacroName="USE_RAY_BINNING" EnumType="Bool" Default="False" CacheSuffix="urb" TargetShaders="cs" />-->
+		</Permutation>
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="ds" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<Define Name="INTERLEAVED_MODE" Value="2" CacheSuffix="intm" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<Define Name="USE_PRE_GENERATED_RAYS" Value="1" CacheSuffix="upgr" TargetShaders="cs" />
+		<Define Name="USE_RAY_BINNING" Value="0" CacheSuffix="urb" TargetShaders="cs" />
+		<ComputeShader Filename="VoxelGlobalIlluminationDiffuseGI.hlsl" EntryPoint="RaymarchDiffuseHitDistanceCS"/>
+	</Pipeline>
+
+	<Pipeline Pass="RenderDiffusePS" InputLayout="FullScreenVertex">
+		<Permutation>
+			<Element Name="UseUpsampling" EnableMacroName="USE_UPSAMPLING" EnumType="Bool" Default="True" CacheSuffix="us" TargetShaders="ps" Condition="Windows|Metal" />
+			<Element Name="ReprojectDiffuseGI" EnableMacroName="REPROJECT_DIFFUSE_GI" EnumType="Bool" Default="True" CacheSuffix="rdgi" TargetShaders="ps" Condition="Windows|Metal" />
+			<!--<Element Name="UpsampleSpecularDirectLighting" EnableMacroName="UPSAMPLE_SPECULAR_DIRECT_LIGHTING" EnumType="Bool" Default="False" CacheSuffix="usdl" TargetShaders="ps" />-->
+			<Element Name="IsShadowInterleaved" EnableMacroName="IS_SHADOW_INTERLEAVED" EnumType="Bool" Default="False" CacheSuffix="isaoi" TargetShaders="all" />
+			<Element Name="UseHairMultipleScattering" EnableMacroName="USE_HAIR_MULTIPLE_SCATTERING" EnumType="Integer" Default="0" Count="3" CacheSuffix="hms" TargetShaders="ps" />
+			<!--<Element Name="UpsampleHairMultipleScattering" EnableMacroName="UPSAMPLE_HAIR_MULTIPLE_SCATTERING" EnumType="Bool" Default="False" CacheSuffix="uhms" TargetShaders="ps" />-->
+			<!--<Element Name="DownsampleDiffuseLighting" EnableMacroName="DOWNSAMPLE_DIFFUSE_LIGHTING" EnumType="Bool" Default="False" CacheSuffix="ddl" TargetShaders="ps" />-->
+			<Element Name="RenderSpecularGI" EnableMacroName="RENDER_SPECULAR_GI" EnumType="Bool" Default="True" CacheSuffix="rsg" TargetShaders="ps" Condition="Windows|Metal" />
+		</Permutation>
+		<Define Name="IS_COMPLEX_MATERIAL" Value="1" CacheSuffix="cm" TargetShaders="ps" />
+		<Define Name="IS_METALLIC" Value="1" CacheSuffix="mtl" TargetShaders="ps" />
+		<Define Name="USE_COLOR_ENCODING" Value="0" CacheSuffix="uce" TargetShaders="ps" />
+		<Define Name="USE_RTAO" Value="0" CacheSuffix="rtao" TargetShaders="ps" />
+		<Define Name="UPSAMPLE_SPECULAR_DIRECT_LIGHTING" Value="1" CacheSuffix="usdl" TargetShaders="ps" />
+		<Define Name="UPSAMPLE_HAIR_MULTIPLE_SCATTERING" Value="1" CacheSuffix="uhms" TargetShaders="ps" />
+		<Define Name="DOWNSAMPLE_DIFFUSE_LIGHTING" Value="1" CacheSuffix="ddl" TargetShaders="ps" />
+		<Define Name="MAXIMIZE_OCCUPANCY" Value="1" CacheSuffix="maxocc" TargetShaders="ps" />
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="VoxelGlobalIlluminationDiffuseGI.hlsl" EntryPoint="RenderDiffusePS"/>
+		<DepthState DepthWrite="False" DepthEnable="True" DepthFunc="Less"/>
+	</Pipeline>
+
+	<Pipeline Pass="RenderDiffuseCS">
+		<Permutation>
+			<Element Name="UseUpsampling" EnableMacroName="USE_UPSAMPLING" EnumType="Bool" Default="True" CacheSuffix="us" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="ReprojectDiffuseGI" EnableMacroName="REPROJECT_DIFFUSE_GI" EnumType="Bool" Default="True" CacheSuffix="rdgi" TargetShaders="cs" Condition="Windows|Metal" />
+			<!--<Element Name="UpsampleSpecularDirectLighting" EnableMacroName="UPSAMPLE_SPECULAR_DIRECT_LIGHTING" EnumType="Bool" Default="False" CacheSuffix="usdl" TargetShaders="cs" />-->
+			<Element Name="IsShadowInterleaved" EnableMacroName="IS_SHADOW_INTERLEAVED" EnumType="Bool" Default="False" CacheSuffix="isaoi" TargetShaders="all" />
+			<Element Name="UseHairMultipleScattering" EnableMacroName="USE_HAIR_MULTIPLE_SCATTERING" EnumType="Integer" Default="0" Count="3" CacheSuffix="hms" TargetShaders="cs" />
+			<!--<Element Name="UpsampleHairMultipleScattering" EnableMacroName="UPSAMPLE_HAIR_MULTIPLE_SCATTERING" EnumType="Bool" Default="False" CacheSuffix="uhms" TargetShaders="cs" />-->
+			<!--<Element Name="DownsampleDiffuseLighting" EnableMacroName="DOWNSAMPLE_DIFFUSE_LIGHTING" EnumType="Bool" Default="False" CacheSuffix="ddl" TargetShaders="cs" />-->
+			<Element Name="RenderSpecularGI" EnableMacroName="RENDER_SPECULAR_GI" EnumType="Bool" Default="True" CacheSuffix="rsg" TargetShaders="cs" Condition="Windows|Metal" />
+		</Permutation>
+		<Define Name="IS_COMPUTE_SHADER" Value="1" CacheSuffix="cs" TargetShaders="cs" />
+		<Define Name="IS_COMPLEX_MATERIAL" Value="1" CacheSuffix="cm" TargetShaders="cs" />
+		<Define Name="IS_METALLIC" Value="1" CacheSuffix="mtl" TargetShaders="cs" />
+		<Define Name="USE_COLOR_ENCODING" Value="0" CacheSuffix="uce" TargetShaders="cs" />
+		<Define Name="USE_RTAO" Value="0" CacheSuffix="rtao" TargetShaders="cs" />
+		<Define Name="UPSAMPLE_SPECULAR_DIRECT_LIGHTING" Value="1" CacheSuffix="usdl" TargetShaders="cs" />
+		<Define Name="UPSAMPLE_HAIR_MULTIPLE_SCATTERING" Value="1" CacheSuffix="uhms" TargetShaders="cs" />
+		<Define Name="DOWNSAMPLE_DIFFUSE_LIGHTING" Value="1" CacheSuffix="ddl" TargetShaders="cs" />
+		<Define Name="MAXIMIZE_OCCUPANCY" Value="1" CacheSuffix="maxocc" TargetShaders="cs" />
+		<ComputeShader Filename="VoxelGlobalIlluminationDiffuseGI.hlsl" EntryPoint="RenderDiffuseCS"/>
+	</Pipeline>
+
+	<Pipeline Pass="RenderDiffuseTiledCS">
+		<Permutation>
+			<Element Name="UseUpsampling" EnableMacroName="USE_UPSAMPLING" EnumType="Bool" Default="True" CacheSuffix="us" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="ReprojectDiffuseGI" EnableMacroName="REPROJECT_DIFFUSE_GI" EnumType="Bool" Default="True" CacheSuffix="rdgi" TargetShaders="cs" Condition="Windows|Metal" />
+			<!--<Element Name="UpsampleSpecularDirectLighting" EnableMacroName="UPSAMPLE_SPECULAR_DIRECT_LIGHTING" EnumType="Bool" Default="False" CacheSuffix="usdl" TargetShaders="cs" />-->
+			<Element Name="IsShadowInterleaved" EnableMacroName="IS_SHADOW_INTERLEAVED" EnumType="Bool" Default="False" CacheSuffix="isaoi" TargetShaders="all" />
+			<Element Name="UseHairMultipleScattering" EnableMacroName="USE_HAIR_MULTIPLE_SCATTERING" EnumType="Integer" Default="0" Count="3" CacheSuffix="hms" TargetShaders="cs" />
+			<!--<Element Name="UpsampleHairMultipleScattering" EnableMacroName="UPSAMPLE_HAIR_MULTIPLE_SCATTERING" EnumType="Bool" Default="False" CacheSuffix="uhms" TargetShaders="cs" />-->
+			<!--<Element Name="DownsampleDiffuseLighting" EnableMacroName="DOWNSAMPLE_DIFFUSE_LIGHTING" EnumType="Bool" Default="False" CacheSuffix="ddl" TargetShaders="cs" />-->
+			<Element Name="RenderSpecularGI" EnableMacroName="RENDER_SPECULAR_GI" EnumType="Bool" Default="True" CacheSuffix="rsg" TargetShaders="cs" Condition="Windows|Metal" />
+		</Permutation>
+		<Define Name="IS_COMPUTE_SHADER" Value="1" CacheSuffix="cs" TargetShaders="cs" />
+		<Define Name="IS_COMPLEX_MATERIAL" Value="1" CacheSuffix="cm" TargetShaders="cs" />
+		<Define Name="USE_COLOR_ENCODING" Value="0" CacheSuffix="uce" TargetShaders="cs" />
+		<Define Name="USE_RTAO" Value="0" CacheSuffix="rtao" TargetShaders="cs" />
+		<Define Name="UPSAMPLE_SPECULAR_DIRECT_LIGHTING" Value="1" CacheSuffix="usdl" TargetShaders="cs" />
+		<Define Name="UPSAMPLE_HAIR_MULTIPLE_SCATTERING" Value="1" CacheSuffix="uhms" TargetShaders="cs" />
+		<Define Name="DOWNSAMPLE_DIFFUSE_LIGHTING" Value="1" CacheSuffix="ddl" TargetShaders="cs" />
+		<Define Name="MAXIMIZE_OCCUPANCY" Value="1" CacheSuffix="maxocc" TargetShaders="cs" />
+		<ComputeShader Filename="VoxelGlobalIlluminationDiffuseGI.hlsl" EntryPoint="RenderDiffuseTiledCS"/>
+	</Pipeline>
+	
+	<Pipeline Pass="RenderDiffuseTiledSimpleCS">
+		<Permutation>
+			<Element Name="UseUpsampling" EnableMacroName="USE_UPSAMPLING" EnumType="Bool" Default="True" CacheSuffix="us" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="ReprojectDiffuseGI" EnableMacroName="REPROJECT_DIFFUSE_GI" EnumType="Bool" Default="True" CacheSuffix="rdgi" TargetShaders="cs" Condition="Windows|Metal" />
+			<!--<Element Name="UpsampleSpecularDirectLighting" EnableMacroName="UPSAMPLE_SPECULAR_DIRECT_LIGHTING" EnumType="Bool" Default="False" CacheSuffix="usdl" TargetShaders="cs" />-->
+			<Element Name="IsShadowInterleaved" EnableMacroName="IS_SHADOW_INTERLEAVED" EnumType="Bool" Default="False" CacheSuffix="isaoi" TargetShaders="all" />
+			<Element Name="EnableGlobalLights" EnableMacroName="ENABLE_GLOBAL_LIGHTS" EnumType="Bool" Default="False" CacheSuffix="egl" TargetShaders="cs" />
+			<!--<Element Name="UpsampleHairMultipleScattering" EnableMacroName="UPSAMPLE_HAIR_MULTIPLE_SCATTERING" EnumType="Bool" Default="False" CacheSuffix="uhms" TargetShaders="cs" />-->
+			<!--<Element Name="DownsampleDiffuseLighting" EnableMacroName="DOWNSAMPLE_DIFFUSE_LIGHTING" EnumType="Bool" Default="False" CacheSuffix="ddl" TargetShaders="cs" />-->
+			<Element Name="RenderSpecularGI" EnableMacroName="RENDER_SPECULAR_GI" EnumType="Bool" Default="True" CacheSuffix="rsg" TargetShaders="cs" Condition="Windows|Metal" />
+		</Permutation>
+		<Define Name="IS_COMPUTE_SHADER" Value="1" CacheSuffix="cs" TargetShaders="cs" />
+		<Define Name="IS_COMPLEX_MATERIAL" Value="0" CacheSuffix="cm" TargetShaders="cs" />
+		<Define Name="USE_HAIR_MULTIPLE_SCATTERING" Value="0" CacheSuffix="hms" TargetShaders="cs" />
+		<Define Name="USE_COLOR_ENCODING" Value="0" CacheSuffix="uce" TargetShaders="cs" />
+		<Define Name="USE_RTAO" Value="0" CacheSuffix="rtao" TargetShaders="cs" />
+		<Define Name="UPSAMPLE_SPECULAR_DIRECT_LIGHTING" Value="1" CacheSuffix="usdl" TargetShaders="cs" />
+		<Define Name="UPSAMPLE_HAIR_MULTIPLE_SCATTERING" Value="1" CacheSuffix="uhms" TargetShaders="cs" />
+		<Define Name="DOWNSAMPLE_DIFFUSE_LIGHTING" Value="1" CacheSuffix="ddl" TargetShaders="cs" />
+		<Define Name="MAXIMIZE_OCCUPANCY" Value="1" CacheSuffix="maxocc" TargetShaders="cs" />
+		<ComputeShader Filename="VoxelGlobalIlluminationDiffuseGI.hlsl" EntryPoint="RenderDiffuseTiledCS"/>
+	</Pipeline>
+
+	<Pipeline Pass="EvaluateDiffuseRadiance" Condition="ConditionalTextureMSArray">
+		<Permutation>
+			<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="True" CacheSuffix="ds" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="InterleavedMode" EnableMacroName="INTERLEAVED_MODE" EnumType="Integer" Default="2" Count="3" CacheSuffix="intm" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="IsTiled" EnableMacroName="IS_TILED" EnumType="Bool" Default="True" CacheSuffix="tile" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="IsLowQuality" EnableMacroName="IS_LOW_QUALITY" EnumType="Bool" Default="True" CacheSuffix="lq" TargetShaders="cs" />
+			<!--<Element Name="UsePrevFrameScreenSpaceData" EnableMacroName="USE_PREV_FRAME_SCREEN_SPACE_DATA" EnumType="Bool" Default="False" CacheSuffix="pss" TargetShaders="cs" />-->
+			<!--<Element Name="UsePreGeneratedRays" EnableMacroName="USE_PRE_GENERATED_RAYS" EnumType="Bool" Default="False" CacheSuffix="upgr" TargetShaders="cs" />-->
+			<!--<Element Name="UseRayGuiding" EnableMacroName="USE_RAY_GUIDING" EnumType="Bool" Default="False" CacheSuffix="urg" TargetShaders="cs" />-->
+			<!--<Element Name="UseRayBinning" EnableMacroName="USE_RAY_BINNING" EnumType="Bool" Default="False" CacheSuffix="urb" TargetShaders="cs" />-->
+			<Element Name="UseRaytracingHitResult" EnableMacroName="USE_RAYTRACING_HIT_RESULT" EnumType="Bool" Default="True" CacheSuffix="rhr" TargetShaders="cs" />
+			<Element Name="UseSurfelRadiance" EnableMacroName="USE_SURFEL_RADIANCE" EnumType="Bool" Default="False" CacheSuffix="usr" TargetShaders="cs" />
+			<!--<Element Name="CalcCharacterOcclusions" EnableMacroName="CALC_CHARACTER_OCCLUSIONS" EnumType="Bool" Default="False" CacheSuffix="cco" TargetShaders="cs" />-->
+			<Element Name="UseRaymarchedSubsurfaceScattering" EnableMacroName="USE_RAYMARCHED_SUBSURFACE_SCATTERING" EnumType="Bool" Default="False" CacheSuffix="urss" TargetShaders="cs" />
+			<!--<Element Name="UseColorEncoding" EnableMacroName="USE_COLOR_ENCODING" EnumType="Bool" Default="False" CacheSuffix="uce" TargetShaders="cs" />-->
+			<!--<Element Name="UpdateReservoir" EnableMacroName="UPDATE_RESERVOIR" EnumType="Bool" Default="False" CacheSuffix="ursv" TargetShaders="cs" />-->
+			<!--<Element Name="UseRayListBuffer" EnableMacroName="USE_RAY_LIST_BUFFER" EnumType="Bool" Default="False" CacheSuffix="urlb" TargetShaders="cs" />-->
+		</Permutation>
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="ds" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<Define Name="INTERLEAVED_MODE" Value="2" CacheSuffix="intm" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<Define Name="IS_FAR_TILE" Value="0" CacheSuffix="far" TargetShaders="cs" />
+		<Define Name="USE_COLOR_ENCODING" Value="0" CacheSuffix="uce" TargetShaders="cs" />
+		<Define Name="CALC_LOCAL_LIGHTS" Value="0" CacheSuffix="cll" TargetShaders="cs" />
+		<Define Name="USE_HAIR_MULTIPLE_SCATTERING" Value="0" CacheSuffix="hms" TargetShaders="cs" />
+		<Define Name="MAXIMIZE_OCCUPANCY" Value="1" CacheSuffix="maxocc" TargetShaders="cs" />
+		<Define Name="USE_PREV_FRAME_SCREEN_SPACE_DATA" Value="1" CacheSuffix="pss" TargetShaders="cs" />
+		<Define Name="USE_PRE_GENERATED_RAYS" Value="1" CacheSuffix="upgr" TargetShaders="cs" />
+		<Define Name="USE_RAY_BINNING" Value="0" CacheSuffix="urb" TargetShaders="cs" />
+		<Define Name="UPDATE_RESERVOIR" Value="0" CacheSuffix="ursv" TargetShaders="cs" />
+		<ComputeShader Filename="VoxelGlobalIlluminationDiffuseGI.hlsl" EntryPoint="EvaluateDiffuseRadianceCS"/>
+	</Pipeline>
+
+	<Pipeline Pass="TemporalResampleReservoirsDiffuse">
+		<Permutation>
+			<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="True" CacheSuffix="ds" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="IsInitialRayDownsampled" EnableMacroName="IS_INITIAL_RAY_DOWNSAMPLED" EnumType="Bool" Default="True" CacheSuffix="irds" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="InterleavedMode" EnableMacroName="INTERLEAVED_MODE" EnumType="Integer" Default="2" Count="3" CacheSuffix="intm" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="UseSpatialResampling" EnableMacroName="USE_SPATIAL_RESAMPLING" EnumType="Bool" Default="False" CacheSuffix="usr" TargetShaders="cs" />
+			<Element Name="UseVisibilityRays" EnableMacroName="USE_VISIBILITY_RAYS" EnumType="Bool" Default="False" CacheSuffix="uvr" TargetShaders="cs" />
+			<!--<Element Name="UseStochasticVisibilityRays" EnableMacroName="USE_STOCHASTIC_VISIBILITY_RAYS" EnumType="Bool" Default="False" CacheSuffix="usvr" TargetShaders="cs" />-->
+			<Element Name="UseRaytracedNormal" EnableMacroName="USE_RAYTRACED_NORMAL" EnumType="Bool" Default="False" CacheSuffix="urn" TargetShaders="cs" />
+		</Permutation>
+		<Define Name="USE_STOCHASTIC_VISIBILITY_RAYS" Value="0" CacheSuffix="usvr" TargetShaders="cs" />
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="ds" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<Define Name="INTERLEAVED_MODE" Value="2" CacheSuffix="intm" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<ComputeShader Filename="VoxelGlobalIlluminationDiffuseGI.hlsl" EntryPoint="TemporalResampleReservoirsDiffuseCS" />
+	</Pipeline>
+
+	<Pipeline Pass="SpatialResampleReservoirsDiffuse">
+		<Permutation>
+			<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="True" CacheSuffix="ds" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="InterleavedMode" EnableMacroName="INTERLEAVED_MODE" EnumType="Integer" Default="2" Count="3" CacheSuffix="intm" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="UseVisibilityRays" EnableMacroName="USE_VISIBILITY_RAYS" EnumType="Bool" Default="False" CacheSuffix="uvr" TargetShaders="cs" />
+		</Permutation>
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="ds" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<Define Name="INTERLEAVED_MODE" Value="2" CacheSuffix="intm" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<ComputeShader Filename="VoxelGlobalIlluminationDiffuseGI.hlsl" EntryPoint="SpatialResampleReservoirsDiffuseCS" />
+	</Pipeline>
+
+	<Pipeline Pass="EvaluateSpecularRadiancePS" InputLayout="FullScreenVertex">
+		<Permutation>
+			<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="True" CacheSuffix="ds" TargetShaders="ps" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<!--<Element Name="IsAODownsampled" EnableMacroName="IS_AO_DOWNSAMPLED" EnumType="Bool" Default="False" CacheSuffix="aods" TargetShaders="ps" />
+			<!--<Element Name="UseDownsampledDepthForScreenSpaceRays" EnableMacroName="USE_DOWNSAMPLED_DEPTH_FOR_SCREEN_SPACE_RAYS" EnumType="Bool" Default="False" CacheSuffix="ddssr" TargetShaders="ps" />-->
+			<Element Name="UseTiledRadianceCache" EnableMacroName="USE_TILED_RADIANCE_CACHE" EnumType="Bool" Default="True" CacheSuffix="utrc" TargetShaders="ps" Condition="Windows|Metal" />
+			<Element Name="UseSpecularReprojection" EnableMacroName="USE_SPECULAR_REPROJECTION" EnumType="Bool" Default="False" CacheSuffix="srp" TargetShaders="ps" Condition="Windows|Metal" />
+			<!--<Element Name="UseConvergenceFeedback" EnableMacroName="USE_CONVERGENCE_FEEDBACK" EnumType="Bool" Default="False" CacheSuffix="cf" TargetShaders="ps" />-->
+			<Element Name="UseVoxelRaymarching" EnableMacroName="USE_VOXEL_RAYMARCHING" EnumType="Bool" Default="True" CacheSuffix="uvrm" TargetShaders="ps" />
+			<Element Name="UseRaytracingHitResult" EnableMacroName="USE_RAYTRACING_HIT_RESULT" EnumType="Bool" Default="True" CacheSuffix="urth" TargetShaders="ps" />
+			<Element Name="UseSurfelRadiance" EnableMacroName="USE_SURFEL_RADIANCE" EnumType="Bool" Default="False" CacheSuffix="usr" TargetShaders="ps" />
+			<!--<Element Name="UsePrevFrameDiffuseLighting" EnableMacroName="USE_PREV_FRAME_DIFFUSE_LIGHTING" EnumType="Bool" Default="True" CacheSuffix="updl" TargetShaders="ps" />-->
+			<!--<Element Name="MergeWithSpecularDirectLighting" EnableMacroName="MERGE_WITH_SPECULAR_DIRECT_LIGHTING" EnumType="Bool" Default="True" CacheSuffix="msdl" TargetShaders="ps" />-->
+		</Permutation>
+		<Define Name="HIGH_QUALITY" Value="0" CacheSuffix="hq" TargetShaders="ps" />
+		<Define Name="USE_DOWNSAMPLED_DEPTH_FOR_SCREEN_SPACE_RAYS" Value="1" CacheSuffix="ddssr" TargetShaders="ps" />
+		<Define Name="CALC_CHARACTER_OCCLUSIONS" Value="0" CacheSuffix="cco" TargetShaders="ps" />
+		<Define Name="USE_COLOR_ENCODING" Value="0" CacheSuffix="uce" TargetShaders="ps" />
+		<Define Name="USE_CONVERGENCE_FEEDBACK" Value="0" CacheSuffix="cf" TargetShaders="ps" />
+		<Define Name="USE_PREV_FRAME_DIFFUSE_LIGHTING" Value="1" CacheSuffix="updl" TargetShaders="ps" />
+		<Define Name="MERGE_WITH_SPECULAR_DIRECT_LIGHTING" Value="1" CacheSuffix="msdl" TargetShaders="ps" />
+		<Define Name="MAXIMIZE_OCCUPANCY" Value="1" CacheSuffix="maxocc" TargetShaders="ps" />
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="ds" TargetShaders="ps" Condition="!Native16bitShaderOps"/>
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="VoxelGlobalIlluminationSpecularGI.hlsl" EntryPoint="EvaluateSpecularRadiancePS"/>
+		<DepthState DepthWrite="False" DepthEnable="True" DepthFunc="Less"/>
+	</Pipeline>
+
+	<Pipeline Pass="EvaluateSpecularRadiance" Condition="ConditionalTextureMSArray">
+		<Permutation>
+			<Element Name="IsTiled" EnableMacroName="IS_TILED" EnumType="Bool" Default="True" CacheSuffix="tile" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="IsFarTile" EnableMacroName="IS_FAR_TILE" EnumType="Bool" Default="False" CacheSuffix="far" TargetShaders="cs" />
+			<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="True" CacheSuffix="ds" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<!--<Element Name="IsAODownsampled" EnableMacroName="IS_AO_DOWNSAMPLED" EnumType="Bool" Default="False" CacheSuffix="aods" TargetShaders="cs" />
+			<!--<Element Name="UseDownsampledDepthForScreenSpaceRays" EnableMacroName="USE_DOWNSAMPLED_DEPTH_FOR_SCREEN_SPACE_RAYS" EnumType="Bool" Default="False" CacheSuffix="ddssr" TargetShaders="cs" />-->
+			<Element Name="UseTiledRadianceCache" EnableMacroName="USE_TILED_RADIANCE_CACHE" EnumType="Bool" Default="True" CacheSuffix="utrc" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="UseSpecularReprojection" EnableMacroName="USE_SPECULAR_REPROJECTION" EnumType="Bool" Default="False" CacheSuffix="srp" TargetShaders="cs" Condition="Windows|Metal" />
+			<!--<Element Name="UseConvergenceFeedback" EnableMacroName="USE_CONVERGENCE_FEEDBACK" EnumType="Bool" Default="False" CacheSuffix="cf" TargetShaders="cs" />-->
+			<Element Name="UseVoxelRaymarching" EnableMacroName="USE_VOXEL_RAYMARCHING" EnumType="Bool" Default="True" CacheSuffix="uvrm" TargetShaders="cs" />
+			<Element Name="UseRaytracingHitResult" EnableMacroName="USE_RAYTRACING_HIT_RESULT" EnumType="Bool" Default="True" CacheSuffix="urth" TargetShaders="cs" />
+			<Element Name="UseSurfelRadiance" EnableMacroName="USE_SURFEL_RADIANCE" EnumType="Bool" Default="False" CacheSuffix="usr" TargetShaders="cs" />
+			<!--<Element Name="UsePrevFrameDiffuseLighting" EnableMacroName="USE_PREV_FRAME_DIFFUSE_LIGHTING" EnumType="Bool" Default="True" CacheSuffix="updl" TargetShaders="cs" />-->
+			<!--<Element Name="MergeWithSpecularDirectLighting" EnableMacroName="MERGE_WITH_SPECULAR_DIRECT_LIGHTING" EnumType="Bool" Default="True" CacheSuffix="msdl" TargetShaders="cs" />-->
+			<Element Name="IsRoughSpecular" EnableMacroName="IS_ROUGH_SPECULAR" EnumType="Bool" Default="False" CacheSuffix="irs" TargetShaders="cs" />
+		</Permutation>
+		<Define Name="HIGH_QUALITY" Value="0" CacheSuffix="hq" TargetShaders="cs" />
+		<Define Name="USE_DOWNSAMPLED_DEPTH_FOR_SCREEN_SPACE_RAYS" Value="1" CacheSuffix="ddssr" TargetShaders="cs" />
+		<Define Name="CALC_CHARACTER_OCCLUSIONS" Value="0" CacheSuffix="cco" TargetShaders="cs" />
+		<Define Name="USE_COLOR_ENCODING" Value="0" CacheSuffix="uce" TargetShaders="cs" />
+		<Define Name="USE_CONVERGENCE_FEEDBACK" Value="0" CacheSuffix="cf" TargetShaders="cs" />
+		<Define Name="USE_PREV_FRAME_DIFFUSE_LIGHTING" Value="1" CacheSuffix="updl" TargetShaders="cs" />
+		<Define Name="MERGE_WITH_SPECULAR_DIRECT_LIGHTING" Value="1" CacheSuffix="msdl" TargetShaders="cs" />
+		<Define Name="MAXIMIZE_OCCUPANCY" Value="1" CacheSuffix="maxocc" TargetShaders="cs" />
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="ds" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<ComputeShader Filename="VoxelGlobalIlluminationSpecularGI.hlsl" EntryPoint="EvaluateSpecularRadianceCS"/>
+	</Pipeline>
+
+	<Pipeline Pass="RenderSpecular" InputLayout="FullScreenVertex" Condition="Windows|Metal">
+		<Permutation>
+			<Element Name="UseUpsampling" EnableMacroName="USE_UPSAMPLING" EnumType="Bool" Default="False" CacheSuffix="us" TargetShaders="ps" Condition="Windows|Metal" />
+			<Element Name="UpsampleDirectLighting" EnableMacroName="UPSAMPLE_DIRECT_LIGHTING" EnumType="Integer" Default="0" Count="3" CacheSuffix="udl" TargetShaders="ps" />
+			<Element Name="UseSpecularReprojection" EnableMacroName="USE_SPECULAR_REPROJECTION" EnumType="Bool" Default="True" CacheSuffix="srp" TargetShaders="ps" />
+			<Element Name="RenderAtmosphericScattering" EnableMacroName="RENDER_ATMOSPHERIC_SCATTERING" EnumType="Bool" Default="False" CacheSuffix="ras" TargetShaders="ps" />
+		</Permutation>
+		<Define Name="IS_COMPLEX_MATERIAL" Value="1" CacheSuffix="cm" TargetShaders="ps" />
+		<Define Name="USE_COLOR_ENCODING" Value="0" CacheSuffix="uce" TargetShaders="ps" />
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="VoxelGlobalIlluminationSpecularGI.hlsl" EntryPoint="RenderSpecularPS"/>
+		<BlendState AlphaBlend="PremultipliedAlpha"/>
+		<DepthState DepthWrite="False" DepthEnable="True" DepthFunc="Less"/>
+	</Pipeline>
+
+	<Pipeline Pass="RenderSpecularCS" Condition="Windows|Metal">
+		<Permutation>
+			<Element Name="UseUpsampling" EnableMacroName="USE_UPSAMPLING" EnumType="Bool" Default="False" CacheSuffix="us" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="UpsampleDirectLighting" EnableMacroName="UPSAMPLE_DIRECT_LIGHTING" EnumType="Integer" Default="0" Count="3" CacheSuffix="udl" TargetShaders="cs" />
+			<Element Name="UseSpecularReprojection" EnableMacroName="USE_SPECULAR_REPROJECTION" EnumType="Bool" Default="True" CacheSuffix="srp" TargetShaders="cs" />
+			<Element Name="RenderAtmosphericScattering" EnableMacroName="RENDER_ATMOSPHERIC_SCATTERING" EnumType="Bool" Default="False" CacheSuffix="ras" TargetShaders="cs" />
+		</Permutation>
+		<Define Name="IS_COMPUTE_SHADER" Value="1" CacheSuffix="cs" TargetShaders="cs" />
+		<Define Name="IS_COMPLEX_MATERIAL" Value="1" CacheSuffix="cm" TargetShaders="cs" />
+		<Define Name="USE_COLOR_ENCODING" Value="0" CacheSuffix="uce" TargetShaders="cs" />
+		<ComputeShader Filename="VoxelGlobalIlluminationSpecularGI.hlsl" EntryPoint="RenderSpecularCS"/>
+	</Pipeline>
+
+	<Pipeline Pass="RenderSpecularTiledCS" Condition="Windows|Metal">
+		<Permutation>
+			<Element Name="UseUpsampling" EnableMacroName="USE_UPSAMPLING" EnumType="Bool" Default="False" CacheSuffix="us" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="UpsampleDirectLighting" EnableMacroName="UPSAMPLE_DIRECT_LIGHTING" EnumType="Integer" Default="0" Count="3" CacheSuffix="udl" TargetShaders="cs" />
+			<Element Name="UseSpecularReprojection" EnableMacroName="USE_SPECULAR_REPROJECTION" EnumType="Bool" Default="True" CacheSuffix="srp" TargetShaders="cs" />
+			<Element Name="RenderAtmosphericScattering" EnableMacroName="RENDER_ATMOSPHERIC_SCATTERING" EnumType="Bool" Default="False" CacheSuffix="ras" TargetShaders="cs" />
+		</Permutation>
+		<Define Name="IS_COMPUTE_SHADER" Value="1" CacheSuffix="cs" TargetShaders="cs" />
+		<Define Name="USE_COLOR_ENCODING" Value="0" CacheSuffix="uce" TargetShaders="cs" />
+		<ComputeShader Filename="VoxelGlobalIlluminationSpecularGI.hlsl" EntryPoint="RenderSpecularTiledCS"/>
+	</Pipeline>
+	
+	<Pipeline Pass="RenderSpecularTiledComplexMaterialCS" Condition="Windows|Metal">
+		<Permutation>
+			<Element Name="UseUpsampling" EnableMacroName="USE_UPSAMPLING" EnumType="Bool" Default="False" CacheSuffix="us" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="UpsampleDirectLighting" EnableMacroName="UPSAMPLE_DIRECT_LIGHTING" EnumType="Integer" Default="0" Count="3" CacheSuffix="udl" TargetShaders="cs" />
+			<Element Name="UseSpecularReprojection" EnableMacroName="USE_SPECULAR_REPROJECTION" EnumType="Bool" Default="True" CacheSuffix="srp" TargetShaders="cs" />
+			<Element Name="RenderAtmosphericScattering" EnableMacroName="RENDER_ATMOSPHERIC_SCATTERING" EnumType="Bool" Default="False" CacheSuffix="ras" TargetShaders="cs" />
+		</Permutation>
+		<Define Name="IS_COMPUTE_SHADER" Value="1" CacheSuffix="cs" TargetShaders="cs" />
+		<Define Name="IS_COMPLEX_MATERIAL" Value="1" CacheSuffix="cm" TargetShaders="cs" />
+		<Define Name="USE_COLOR_ENCODING" Value="0" CacheSuffix="uce" TargetShaders="cs" />
+		<ComputeShader Filename="VoxelGlobalIlluminationSpecularGI.hlsl" EntryPoint="RenderSpecularTiledCS"/>
+	</Pipeline>
+
+	<Pipeline Pass="GenerateHiZLevel0FromSDF">
+		<ComputeShader Filename="VoxelGlobalIlluminationDiffuseGI.hlsl" EntryPoint="GenerateHiZLevel0FromSDF_CS"/>
+	</Pipeline>
+
+	<Pipeline Pass="SampleManyLights">
+		<Permutation>
+			<Element Name="TraceManyLightsDownsampleType" EnableMacroName="TRACE_MANY_LIGHTS_DOWNSAMPLE_TYPE" EnumType="Integer" Default="2" Count="3" CacheSuffix="mldst" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="IsTiled" EnableMacroName="IS_TILED" EnumType="Bool" Default="True" CacheSuffix="tile" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="UseReservoirSampling" EnableMacroName="USE_RESERVOIR_SAMPLING" EnumType="Bool" Default="False" CacheSuffix="urs" TargetShaders="cs" />
+			<Element Name="IsTranslucency" EnableMacroName="IS_TRANSLUCENCY" EnumType="Bool" Default="False" CacheSuffix="trs" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="VoxelGlobalIlluminationManyLights.hlsl" EntryPoint="SampleManyLightsCS"/>
+	</Pipeline>
+
+	<Pipeline Pass="RaymarchLocalLightsCS" Condition="ConditionalTextureMSArray">
+		<Permutation>
+			<Element Name="IsTiled" EnableMacroName="IS_TILED" EnumType="Bool" Default="True" CacheSuffix="tile" TargetShaders="cs" Condition="Windows|Metal" />
+			<!--<Element Name="CalcCharacterOcclusions" EnableMacroName="CALC_CHARACTER_OCCLUSIONS" EnumType="Bool" Default="False" CacheSuffix="cco" TargetShaders="cs" />-->
+			<Element Name="TraceManyLightsDownsampled" EnableMacroName="TRACE_MANY_LIGHTS_DOWNSAMPLED" EnumType="Bool" Default="True" CacheSuffix="mld" TargetShaders="cs" Condition="Windows|Metal"/>
+			<Element Name="UseReservoirSampling" EnableMacroName="USE_RESERVOIR_SAMPLING" EnumType="Bool" Default="False" CacheSuffix="urs" TargetShaders="cs" />
+			<Element Name="UseRaytracingHitResult" EnableMacroName="USE_RAYTRACING_HIT_RESULT" EnumType="Bool" Default="True" CacheSuffix="rhr" TargetShaders="cs"/>
+			<Element Name="UseSeparateSamplingPass" EnableMacroName="USE_SEPARATE_SAMPLING_PASS" EnumType="Bool" Default="False" CacheSuffix="ussp" TargetShaders="cs" />
+		</Permutation>
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="ds" TargetShaders="cs" />
+		<Define Name="CALC_CHARACTER_OCCLUSIONS" Value="1" CacheSuffix="cco" TargetShaders="cs" />
+		<ComputeShader Filename="VoxelGlobalIlluminationManyLights.hlsl" EntryPoint="RaymarchLocalLightsCS"/>
+	</Pipeline>
+
+	<Pipeline Pass="ManyLightsSpatialResampleReservoirs">
+		<Permutation>
+			<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="True" CacheSuffix="ds" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="IsManyLightsDownsampled" EnableMacroName="IS_MANY_LIGHTS_DOWNSAMPLED" EnumType="Bool" Default="True" CacheSuffix="mld" TargetShaders="cs" Condition="Windows|Metal"/>
+			<Element Name="UseDownsampledReservoir" EnableMacroName="USE_DOWNSAMPLED_RESERVOIR" EnumType="Bool" Default="True" CacheSuffix="udr" TargetShaders="cs" />
+		</Permutation>
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="ds" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<ComputeShader Filename="VoxelGlobalIlluminationManyLights.hlsl" EntryPoint="ManyLightsSpatialResampleReservoirsCS"/>
+	</Pipeline>
+
+	<Pipeline Pass="IntegrateManyLightsUpsample">
+		<Permutation>
+			<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="True" CacheSuffix="ds" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="MergeWithDiffuseIndirectLighting" EnableMacroName="MERGE_WITH_DIFFUSE_INDIRECT_LIGHTING" EnumType="Bool" Default="True" CacheSuffix="mwdil" TargetShaders="cs" />
+			<!--<Element Name="MergeAfterDiffuseIndirectLighting" EnableMacroName="MERGE_AFTER_DIFFUSE_INDIRECT_LIGHTING" EnumType="Bool" Default="True" CacheSuffix="madil" TargetShaders="cs" Condition="Windows|Metal" />-->
+			<Element Name="MergeWithSpecularIndirectLighting" EnableMacroName="MERGE_WITH_SPECULAR_INDIRECT_LIGHTING" EnumType="Bool" Default="True" CacheSuffix="mwsil" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="UseHairMultipleScattering" EnableMacroName="USE_HAIR_MULTIPLE_SCATTERING" EnumType="Bool" Default="False" CacheSuffix="hms" TargetShaders="cs" />
+			<Element Name="IsManyLightsDownsampled" EnableMacroName="IS_MANY_LIGHTS_DOWNSAMPLED" EnumType="Bool" Default="True" CacheSuffix="mld" TargetShaders="cs" Condition="Windows|Metal"/>
+			<Element Name="UseNeighborVisibility" EnableMacroName="USE_NEIGHBOR_VISIBILITY" EnumType="Bool" Default="True" CacheSuffix="unv" TargetShaders="cs" Condition="Windows|Metal"/>
+			<Element Name="UseWiderKernel" EnableMacroName="USE_WIDER_KERNEL" EnumType="Bool" Default="False" CacheSuffix="uwk" TargetShaders="cs" Condition="Windows|Metal"/>
+			<Element Name="IsTiled" EnableMacroName="IS_TILED" EnumType="Bool" Default="True" CacheSuffix="tile" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="IsComplexMaterial" EnableMacroName="IS_COMPLEX_MATERIAL" EnumType="Bool" Default="False" CacheSuffix="cm" TargetShaders="cs" />
+			<Element Name="IsLowQuality" EnableMacroName="IS_LOW_QUALITY" EnumType="Bool" Default="True" CacheSuffix="lq" TargetShaders="cs" />
+		</Permutation>
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="ds" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<Define Name="MERGE_AFTER_DIFFUSE_INDIRECT_LIGHTING" Value="1" CacheSuffix="madil" TargetShaders="cs" />
+		<ComputeShader Filename="VoxelGlobalIlluminationManyLights.hlsl" EntryPoint="IntegrateManyLightsUpsampleCS"/>
+	</Pipeline>
+
+	<Pipeline Pass="GenerateManyLightsMoments">
+		<Permutation>
+			<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="True" CacheSuffix="ds" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="IsTiled" EnableMacroName="IS_TILED" EnumType="Bool" Default="True" CacheSuffix="tile" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="IsManyLightsFilteringEnabled" EnableMacroName="IS_MANY_LIGHTS_FILTERING_ENABLED" EnumType="Bool" Default="True" CacheSuffix="mlf" TargetShaders="cs" />
+		</Permutation>
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="ds" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<ComputeShader Filename="VoxelGlobalIlluminationManyLights.hlsl" EntryPoint="GenerateManyLightsMomentsCS"/>
+	</Pipeline>
+
+	<Pipeline Pass="GenerateHairScatteringRadianceOctahedrons">
+		<Permutation>
+			<Element Name="ApplyIndirectLighting" EnableMacroName="APPLY_INDIRECT_LIGHTING" EnumType="Bool" Default="False" CacheSuffix="ail" TargetShaders="cs" Condition="Windows|Metal" />
+		</Permutation>
+		<ComputeShader Filename="VoxelGlobalIlluminationManyLights.hlsl" EntryPoint="GenerateHairScatteringRadianceOctahedronsCS"/>
+	</Pipeline>
+
+	<!-- Filtering -->
+	<Pipeline Pass="BilateralFilterSpecularGI">
+		<Permutation>
+			<Element Name="UseNormalDepthMerged" EnableMacroName="NORMAL_DEPTH_MERGED" EnumType="Bool" Default="True" CacheSuffix="ndm" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="IsSeparable" EnableMacroName="IS_SEPARABLE" EnumType="Bool" Default="True" CacheSuffix="sep" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="UseTiledType" EnableMacroName="USE_TILED_TYPE" EnumType="Integer" Count="3" Default="0" CacheSuffix="tt" TargetShaders="cs" />
+			<Element Name="UseWiderKernelForSpecularFiltering" EnableMacroName="USE_WIDER_KERNEL_FOR_SPECULAR_FILTERING" EnumType="Bool" Default="True" CacheSuffix="uwk" TargetShaders="cs" />
+		</Permutation>
+		<Define Name="USE_COLOR_ENCODING" Value="0" CacheSuffix="uce" TargetShaders="cs" />
+		<ComputeShader Filename="Filtering.hlsl" EntryPoint="BilateralFilterSpecularGI_CS" />
+	</Pipeline>
+
+	<Pipeline Pass="BilateralFilterDiffuseGI" Condition="Windows|Metal">
+		<Permutation>
+			<Element Name="IsSeparable" EnableMacroName="IS_SEPARABLE" EnumType="Bool" Default="True" CacheSuffix="sep" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="UseTiledType" EnableMacroName="USE_TILED_TYPE" EnumType="Integer" Count="3" Default="0" CacheSuffix="tt" TargetShaders="cs" />
+			<Element Name="UseSimpleFilter" EnableMacroName="USE_SIMPLE_FILTER" EnumType="Bool" Default="False" CacheSuffix="sf" TargetShaders="cs" />
+			<Element Name="FilterDirectLighting" EnableMacroName="FILTER_DIRECT_LIGHTING" EnumType="Bool" Default="False" CacheSuffix="fdr" TargetShaders="cs" />
+			<Element Name="UseHighQualityFilter" EnableMacroName="USE_HIGH_QUALITY_FILTER" EnumType="Bool" Default="False" CacheSuffix="hqf" TargetShaders="cs" />
+		</Permutation>
+		<Define Name="USE_COLOR_ENCODING" Value="0" CacheSuffix="uce" TargetShaders="cs" />
+		<ComputeShader Filename="Filtering.hlsl" EntryPoint="BilateralFilterDiffuseGI_CS" />
+	</Pipeline>
+
+	<Pipeline Pass="BilateralFilterDiffuseHitDistance" Condition="Windows|Metal">
+		<Permutation>
+			<Element Name="IsTiled" EnableMacroName="IS_TILED" EnumType="Bool" Default="False" CacheSuffix="tile" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="UpdateSampleCountWeight" EnableMacroName="UPDATE_SAMPLE_COUNT_WEIGHT" EnumType="Bool" Default="False" CacheSuffix="uscw" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="Filtering.hlsl" EntryPoint="BilateralFilterDiffuseHitDistanceCS" />
+	</Pipeline>
+
+	<Pipeline Pass="BilateralFilterManyLights">
+		<Permutation>
+			<Element Name="IsSeparable" EnableMacroName="IS_SEPARABLE" EnumType="Bool" Default="True" CacheSuffix="sep" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="IsTiled" EnableMacroName="IS_TILED" EnumType="Bool" Default="False" CacheSuffix="tile" TargetShaders="cs" Condition="Windows|Metal"/>
+			<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="True" CacheSuffix="ds" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+		</Permutation>
+		<ComputeShader Filename="Filtering.hlsl" EntryPoint="BilateralFilterManyLightsCS" />
+	</Pipeline>
+
+	<Pipeline Pass="BilateralFilterHairMultipleScattering">
+		<Permutation>
+			<Element Name="UseTiledType" EnableMacroName="USE_TILED_TYPE" EnumType="Integer" Count="2" Default="0" CacheSuffix="tt" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="Filtering.hlsl" EntryPoint="BilateralFilterHairMultipleScatteringCS" />
+	</Pipeline>
+
+	<Pipeline Pass="BilateralReconstructDiffuseGI" Condition="Windows|Metal">
+		<Permutation>
+			<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="True" CacheSuffix="ds" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="InterleavedMode" EnableMacroName="INTERLEAVED_MODE" EnumType="Integer" Default="2" Count="3" CacheSuffix="intm" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="UseTiledRadianceCache" EnableMacroName="USE_TILED_RADIANCE_CACHE" EnumType="Bool" Default="True" CacheSuffix="utrc" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="UseClusteredRadianceCache" EnableMacroName="USE_CLUSTERED_RADIANCE_CACHE" EnumType="Bool" Default="True" CacheSuffix="ucrc" TargetShaders="cs" Condition="Windows|Metal" />
+			<!--<Element Name="UseBentCone" EnableMacroName="USE_BENT_CONE" EnumType="Bool" Default="False" CacheSuffix="bc" TargetShaders="cs" />-->
+			<Element Name="ReprojectDiffuseGIDownsampled" EnableMacroName="REPROJECT_DIFFUSE_GI" EnumType="Bool" Default="False" CacheSuffix="rdgi" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="GenerateDiffuseGIForRadianceCache" EnableMacroName="GENERATE_DIFFUSE_GI_FOR_RADIANCE_CACHE" EnumType="Bool" Default="False" CacheSuffix="gdrc" TargetShaders="cs" />
+			<Element Name="IsHighQualityGI" EnableMacroName="IS_HIGH_QUALITY_GI" EnumType="Bool" Default="False" CacheSuffix="hqgi" TargetShaders="cs" />
+			<Element Name="UseRayReconstruction" EnableMacroName="USE_RAY_RECONSTRUCTION" EnumType="Bool" Default="False" CacheSuffix="urr" TargetShaders="cs" />
+		</Permutation>
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="ds" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<Define Name="INTERLEAVED_MODE" Value="2" CacheSuffix="intm" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<Define Name="USE_COLOR_ENCODING" Value="0" CacheSuffix="uce" TargetShaders="cs" />
+		<Define Name="USE_HIGH_ORDER_TILED_RADIANCE_CACHE" Value="1" CacheSuffix="uhotrc" TargetShaders="cs" />
+		<Define Name="USE_HIT_DISTANCE_WEIGHTS_FOR_TILED_RADIANCE_CACHE" Value="0" CacheSuffix="hdwtrc" TargetShaders="cs" />
+		<Define Name="USE_LRU_BINNING_FOR_CLUSTERED_RADIANCE_CACHE" Value="1" CacheSuffix="lrucrc" TargetShaders="cs" />
+		<Define Name="USE_DEPTH_RANGE_FOR_CLUSTERED_RADIANCE_CACHE" Value="0" CacheSuffix="udr" TargetShaders="cs" />
+		<Define Name="USE_BENT_CONE" Value="1" CacheSuffix="bc" TargetShaders="cs" />
+		<Define Name="MAXIMIZE_OCCUPANCY" Value="1" CacheSuffix="maxocc" TargetShaders="cs" />
+		<ComputeShader Filename="Filtering.hlsl" EntryPoint="BilateralReconstructDiffuseGI_CS" />
+	</Pipeline>
+
+	<Pipeline Pass="BilateralReconstructDiffuseGITiled">
+		<Permutation>
+			<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="True" CacheSuffix="ds" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="InterleavedMode" EnableMacroName="INTERLEAVED_MODE" EnumType="Integer" Default="2" Count="3" CacheSuffix="intm" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="UseTiledRadianceCache" EnableMacroName="USE_TILED_RADIANCE_CACHE" EnumType="Bool" Default="True" CacheSuffix="utrc" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="UseClusteredRadianceCache" EnableMacroName="USE_CLUSTERED_RADIANCE_CACHE" EnumType="Bool" Default="True" CacheSuffix="ucrc" TargetShaders="cs" Condition="Windows|Metal" />
+			<!--<Element Name="UseBentCone" EnableMacroName="USE_BENT_CONE" EnumType="Bool" Default="False" CacheSuffix="bc" TargetShaders="cs" />-->
+			<Element Name="ReprojectDiffuseGIDownsampled" EnableMacroName="REPROJECT_DIFFUSE_GI" EnumType="Bool" Default="False" CacheSuffix="rdgi" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="GenerateDiffuseGIForRadianceCache" EnableMacroName="GENERATE_DIFFUSE_GI_FOR_RADIANCE_CACHE" EnumType="Bool" Default="False" CacheSuffix="gdrc" TargetShaders="cs" />
+			<Element Name="IsHighQualityGI" EnableMacroName="IS_HIGH_QUALITY_GI" EnumType="Bool" Default="False" CacheSuffix="hqgi" TargetShaders="cs" />
+			<Element Name="UseRayReconstruction" EnableMacroName="USE_RAY_RECONSTRUCTION" EnumType="Bool" Default="False" CacheSuffix="urr" TargetShaders="cs" />
+		</Permutation>
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="ds" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<Define Name="INTERLEAVED_MODE" Value="2" CacheSuffix="intm" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<Define Name="USE_COLOR_ENCODING" Value="0" CacheSuffix="uce" TargetShaders="cs" />
+		<Define Name="USE_HIGH_ORDER_TILED_RADIANCE_CACHE" Value="1" CacheSuffix="uhotrc" TargetShaders="cs" />
+		<Define Name="USE_HIT_DISTANCE_WEIGHTS_FOR_TILED_RADIANCE_CACHE" Value="0" CacheSuffix="hdwtrc" TargetShaders="cs" />
+		<Define Name="USE_LRU_BINNING_FOR_CLUSTERED_RADIANCE_CACHE" Value="1" CacheSuffix="lrucrc" TargetShaders="cs" />
+		<Define Name="USE_DEPTH_RANGE_FOR_CLUSTERED_RADIANCE_CACHE" Value="0" CacheSuffix="udr" TargetShaders="cs" />
+		<Define Name="USE_BENT_CONE" Value="1" CacheSuffix="bc" TargetShaders="cs" />
+		<Define Name="MAXIMIZE_OCCUPANCY" Value="1" CacheSuffix="maxocc" TargetShaders="cs" />
+		<ComputeShader Filename="Filtering.hlsl" EntryPoint="BilateralReconstructDiffuseGITiled_CS" />
+	</Pipeline>
+
+	<Pipeline Pass="BilateralReprojectDiffuseGI">
+		<ComputeShader Filename="Filtering.hlsl" EntryPoint="BilateralReprojectDiffuseGI_CS" />
+	</Pipeline>
+
+	<Pipeline Pass="BilateralReprojectDiffuseGIUpsample">
+		<ComputeShader Filename="Filtering.hlsl" EntryPoint="BilateralReprojectDiffuseGIUpsample_CS" />
+	</Pipeline>
+
+	<Pipeline Pass="BilateralReprojectDiffuseGITiled">
+		<ComputeShader Filename="Filtering.hlsl" EntryPoint="BilateralReprojectDiffuseGITiled_CS" />
+	</Pipeline>
+
+	<Pipeline Pass="BilateralReprojectDiffuseGIUpsampleTiled">
+		<ComputeShader Filename="Filtering.hlsl" EntryPoint="BilateralReprojectDiffuseGIUpsampleTiled_CS" />
+	</Pipeline>
+
+	<Pipeline Pass="GenerateTiledRadianceCacheOctahedron">
+		<Permutation>
+			<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="True" CacheSuffix="ds" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="InterleavedMode" EnableMacroName="INTERLEAVED_MODE" EnumType="Integer" Default="2" Count="3" CacheSuffix="intm" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="UseRayGuiding" EnableMacroName="USE_RAY_GUIDING" EnumType="Bool" Default="True" CacheSuffix="urg" TargetShaders="cs" Condition="Windows|Metal" />
+		</Permutation>
+		<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="ds" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<Define Name="INTERLEAVED_MODE" Value="2" CacheSuffix="intm" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<ComputeShader Filename="Filtering.hlsl" EntryPoint="GenerateTiledRadianceCacheOctahedronCS" />
+	</Pipeline>
+
+	<Pipeline Pass="GenerateTiledRadianceCacheSH">
+		<Permutation>
+			<!--<Element Name="UseHighOrderSH" EnableMacroName="USE_HIGH_ORDER_SH" EnumType="Bool" Default="False" CacheSuffix="uhosh" TargetShaders="cs" />-->
+			<Element Name="GenerateClusteredRadianceCacheSH" EnableMacroName="GENERATE_CLUSTERED_RADIANCE_CACHE_SH" EnumType="Bool" Default="True" CacheSuffix="gcrc" TargetShaders="cs" Condition="Windows|Metal" />
+			<!--<Element Name="UseDepthRangeForClusteredRadianceCache" EnableMacroName="USE_DEPTH_RANGE_FOR_CLUSTERED_RADIANCE_CACHE" EnumType="Bool" Default="False" CacheSuffix="udr" TargetShaders="cs" />-->
+		</Permutation>
+		<Define Name="USE_HIGH_ORDER_SH" Value="1" CacheSuffix="uhosh" TargetShaders="cs" />
+		<Define Name="USE_LRU_BINNING_FOR_CLUSTERED_RADIANCE_CACHE" Value="1" CacheSuffix="lrucrc" TargetShaders="cs" />
+		<Define Name="USE_DEPTH_RANGE_FOR_CLUSTERED_RADIANCE_CACHE" Value="0" CacheSuffix="udr" TargetShaders="cs" />
+		<ComputeShader Filename="Filtering.hlsl" EntryPoint="GenerateTiledRadianceCacheSH_CS" />
+	</Pipeline>
+
+	<Pipeline Pass="ReprojectClusteredRadianceCacheDepth">
+		<Define Name="USE_LRU_BINNING_FOR_CLUSTERED_RADIANCE_CACHE" Value="1" CacheSuffix="lrucrc" TargetShaders="cs" />
+		<Define Name="USE_DEPTH_RANGE_FOR_CLUSTERED_RADIANCE_CACHE" Value="0" CacheSuffix="udr" TargetShaders="cs" />
+		<ComputeShader Filename="Filtering.hlsl" EntryPoint="ReprojectClusteredRadianceCacheDepthCS" />
+	</Pipeline>
+
+	<Pipeline Pass="ReprojectClusteredRadianceCacheSH">
+		<Permutation>
+			<!--<Element Name="UseHighOrderSH" EnableMacroName="USE_HIGH_ORDER_SH" EnumType="Bool" Default="False" CacheSuffix="uhosh" TargetShaders="cs" />-->
+			<!--<Element Name="UseDepthRangeForClusteredRadianceCache" EnableMacroName="USE_DEPTH_RANGE_FOR_CLUSTERED_RADIANCE_CACHE" EnumType="Bool" Default="False" CacheSuffix="udr" TargetShaders="cs" />-->
+		</Permutation>
+		<Define Name="USE_HIGH_ORDER_SH" Value="1" CacheSuffix="uhosh" TargetShaders="cs" />
+		<Define Name="USE_LRU_BINNING_FOR_CLUSTERED_RADIANCE_CACHE" Value="1" CacheSuffix="lrucrc" TargetShaders="cs" />
+		<Define Name="USE_DEPTH_RANGE_FOR_CLUSTERED_RADIANCE_CACHE" Value="0" CacheSuffix="udr" TargetShaders="cs" />
+		<ComputeShader Filename="Filtering.hlsl" EntryPoint="ReprojectClusteredRadianceCacheSH_CS" />
+	</Pipeline>
+
+	<Pipeline Pass="FilterTiledRadianceCacheOctahedron">
+		<ComputeShader Filename="Filtering.hlsl" EntryPoint="FilterTiledRadianceCacheOctahedronCS" />
+	</Pipeline>
+
+	<Pipeline Pass="IntegrateHairScatteringDownsampled">
+		<Permutation>
+			<Element Name="IsTiled" EnableMacroName="IS_TILED" EnumType="Bool" Default="True" CacheSuffix="tile" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="True" CacheSuffix="ds" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="ApplyIndirectLighting" EnableMacroName="APPLY_INDIRECT_LIGHTING" EnumType="Bool" Default="False" CacheSuffix="ail" TargetShaders="cs" Condition="Windows|Metal" />
+			<Element Name="MergeWithDiffuseIndirectLighting" EnableMacroName="MERGE_WITH_DIFFUSE_INDIRECT_LIGHTING" EnumType="Bool" Default="True" CacheSuffix="mwdil" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="DeferredLighting.hlsl" EntryPoint="IntegrateHairScatteringDownsampledCS" />
+	</Pipeline>
+
+	<!-- Shadow AO -->
+	<Pipeline Pass="SceneShadow" Condition="ConditionalTextureMSArray">
+		<Define Name="USE_DYNAMIC_SHADOWS" Value="1" CacheSuffix="uds" TargetShaders="cs" />
+		<Define Name="USE_INLINE_RAYTRACING" Value="0" CacheSuffix="uir" TargetShaders="cs" />
+		<Define Name="USE_SHADOW_COLOR" Value="1" CacheSuffix="sc" TargetShaders="cs" />
+		<Define Name="USE_NEIGHBOR_SAMPLES" Value="0" CacheSuffix="nr" TargetShaders="cs" />
+		<Define Name="IS_COMPLEX_MATERIAL" Value="1" CacheSuffix="cm" TargetShaders="cs" />
+		<Permutation>
+			<Element Name="UseRaytracedShadows" EnableMacroName="USE_RAYTRACED_SHADOWS" EnumType="Bool" Default="True" CacheSuffix="rtshd" TargetShaders="cs" Condition="Windows"/>
+			<!--<Element Name="UseShadowColor" EnableMacroName="USE_SHADOW_COLOR" EnumType="Bool" Default="False" CacheSuffix="sc" TargetShaders="cs" />-->
+			<Element Name="UseContactShadow" EnableMacroName="USE_CONTACT_SHADOW" EnumType="Bool" Default="True" CacheSuffix="cs" TargetShaders="cs" />
+			<Element Name="UseNearFieldShadow" EnableMacroName="USE_NEAR_FIELD_SHADOW" EnumType="Bool" Default="False" CacheSuffix="nfs" TargetShaders="cs" />
+			<!--<Element Name="UseNeighborSamples" EnableMacroName="USE_NEIGHBOR_SAMPLES" EnumType="Bool" Default="False" CacheSuffix="nr" TargetShaders="cs" />-->
+			<Element Name="IsInterleaved" EnableMacroName="RENDER_SHADOW_INTERLEAVED" EnumType="Bool" Default="False" CacheSuffix="il" TargetShaders="cs" />
+			<Element Name="IsHighQuality" EnableMacroName="IS_HIGH_QUALITY" EnumType="Bool" Default="True" CacheSuffix="hq" TargetShaders="cs" Condition="Windows" />
+		</Permutation>
+		<ComputeShader Filename="ShadowAO.hlsl" EntryPoint="SceneShadowCS" />
+	</Pipeline>
+
+	<Pipeline Pass="SceneShadowTiled" Condition="ConditionalTextureMSArray">
+		<Define Name="USE_DYNAMIC_SHADOWS" Value="1" CacheSuffix="uds" TargetShaders="cs" />
+		<Define Name="USE_INLINE_RAYTRACING" Value="0" CacheSuffix="uir" TargetShaders="cs" />
+		<Define Name="USE_SHADOW_COLOR" Value="1" CacheSuffix="sc" TargetShaders="cs" />
+		<Define Name="USE_NEIGHBOR_SAMPLES" Value="0" CacheSuffix="nr" TargetShaders="cs" />
+		<Permutation>
+			<Element Name="UseRaytracedShadows" EnableMacroName="USE_RAYTRACED_SHADOWS" EnumType="Bool" Default="True" CacheSuffix="rtshd" TargetShaders="cs" Condition="Windows"/>
+			<!--<Element Name="UseShadowColor" EnableMacroName="USE_SHADOW_COLOR" EnumType="Bool" Default="False" CacheSuffix="sc" TargetShaders="cs" />-->
+			<Element Name="UseContactShadow" EnableMacroName="USE_CONTACT_SHADOW" EnumType="Bool" Default="True" CacheSuffix="cs" TargetShaders="cs" />
+			<Element Name="UseNearFieldShadow" EnableMacroName="USE_NEAR_FIELD_SHADOW" EnumType="Bool" Default="False" CacheSuffix="nfs" TargetShaders="cs" />
+			<!--<Element Name="UseNeighborSamples" EnableMacroName="USE_NEIGHBOR_SAMPLES" EnumType="Bool" Default="False" CacheSuffix="nr" TargetShaders="cs" />-->
+			<Element Name="IsInterleaved" EnableMacroName="RENDER_SHADOW_INTERLEAVED" EnumType="Bool" Default="False" CacheSuffix="il" TargetShaders="cs" />
+			<Element Name="IsHighQuality" EnableMacroName="IS_HIGH_QUALITY" EnumType="Bool" Default="True" CacheSuffix="hq" TargetShaders="cs" Condition="Windows" />
+			<Element Name="IsComplexMaterial" EnableMacroName="IS_COMPLEX_MATERIAL" EnumType="Bool" Default="False" CacheSuffix="cm" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="ShadowAO.hlsl" EntryPoint="SceneShadowTiledCS" />
+	</Pipeline>
+
+	<Pipeline Pass="SceneAO" Condition="ConditionalTextureMSArray" Condition="Windows">
+		<Permutation>
+			<Element Name="IsInterleaved" EnableMacroName="RENDER_AO_INTERLEAVED" EnumType="Bool" Default="True" CacheSuffix="il" TargetShaders="cs" />
+			<!--<Element Name="UseTiledRadianceCache" EnableMacroName="USE_TILED_RADIANCE_CACHE" EnumType="Bool" Default="False" CacheSuffix="utrc" TargetShaders="cs"/>-->
+		</Permutation>
+		<Define Name="USE_TILED_RADIANCE_CACHE" Value="0" CacheSuffix="utrc" TargetShaders="cs" />
+		<ComputeShader Filename="ShadowAO.hlsl" EntryPoint="SceneAO_CS" />
+	</Pipeline>
+
+	<Pipeline Pass="SceneAOTiled" Condition="ConditionalTextureMSArray">
+		<Permutation>
+			<Element Name="IsInterleaved" EnableMacroName="RENDER_AO_INTERLEAVED" EnumType="Bool" Default="False" CacheSuffix="il" TargetShaders="cs" />
+			<!--<Element Name="UseTiledRadianceCache" EnableMacroName="USE_TILED_RADIANCE_CACHE" EnumType="Bool" Default="False" CacheSuffix="utrc" TargetShaders="cs"/>-->
+		</Permutation>
+		<Define Name="USE_TILED_RADIANCE_CACHE" Value="0" CacheSuffix="utrc" TargetShaders="cs" />
+		<ComputeShader Filename="ShadowAO.hlsl" EntryPoint="SceneAOTiled_CS" />
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="VoxelGlobalIlluminationRadianceCache">
+	<!-- redefining here to avoid including VoxelGlobalIlluminationGenerate.hlsl -->
+	<Pipeline Pass="ClearStructureCount">
+		<ComputeShader Filename="VoxelGlobalIlluminationRadianceCache.hlsl" EntryPoint="ClearStructureCountCS"/>
+	</Pipeline>
+	<Pipeline Pass="SetDispatchIndirectArguments">
+		<ComputeShader Filename="VoxelGlobalIlluminationRadianceCache.hlsl" EntryPoint="SetDispatchIndirectArgumentsCS"/>
+	</Pipeline>
+
+	<Pipeline Pass="GenerateRadianceVoxelUpdateListFromSurfels">
+		<Permutation>
+			<Element Name="UpdateRadianceSurfelBased" EnableMacroName="UPDATE_RADIANCE_SURFEL_BASED" EnumType="Bool" Default="False" CacheSuffix="ursb" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="VoxelGlobalIlluminationRadianceCache.hlsl" EntryPoint="GenerateRadianceVoxelUpdateListFromSurfelsCS"/>
+	</Pipeline>
+
+	<Pipeline Pass="UpdateRadianceVoxelLighting" Condition="ConditionalTextureMSArray&ConditionalTrinity">
+		<Permutation>
+			<Element Name="UseHighSampleCount" EnableMacroName="USE_HIGH_SAMPLE_COUNT" EnumType="Bool" Default="True" CacheSuffix="uhs" TargetShaders="cs" />
+			<Element Name="UseRaytracing" EnableMacroName="USE_RAYTRACING" EnumType="Bool" Default="True" CacheSuffix="urt" TargetShaders="cs" Condition="Raytracing" />
+			<Element Name="UpdateRadianceSurfelBased" EnableMacroName="UPDATE_RADIANCE_SURFEL_BASED" EnumType="Bool" Default="False" CacheSuffix="ursb" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="VoxelGlobalIlluminationRadianceCache.hlsl" EntryPoint="UpdateRadianceVoxelLightingCS" Library="Raytracing"/>
+	</Pipeline>
+
+	<Pipeline Pass="UpdateIndirectCacheLighting" Condition="ConditionalTextureMSArray&ConditionalTrinity">
+		<Permutation>
+			<Element Name="UseHighSampleCount" EnableMacroName="USE_HIGH_SAMPLE_COUNT" EnumType="Bool" Default="True" CacheSuffix="uhs" TargetShaders="cs" />
+			<Element Name="UseRaytracing" EnableMacroName="USE_RAYTRACING" EnumType="Bool" Default="True" CacheSuffix="urt" TargetShaders="cs" Condition="Raytracing" />
+			<Element Name="UseSurfelRadiance" EnableMacroName="USE_SURFEL_RADIANCE" EnumType="Bool" Default="False" CacheSuffix="usr" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="VoxelGlobalIlluminationRadianceCache.hlsl" EntryPoint="UpdateIndirectCacheLightingCS" Library="Raytracing"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="VoxelGlobalIlluminationGenerateSDFVoxelsFromObjects" FrameBuffer="SceneVoxelClipmaps" Condition="(MultiDraw|OptionalBarycentric)&!Android">
+	<Permutation>
+		<Element Name="AlphaTest" EnableMacroName="ALPHA_TEST" EnumType="Bool" Default="False" CacheSuffix="at" TargetShaders="all" />
+		<!--<Element Name="Dynamic" EnableMacroName="IS_DYNAMIC" EnumType="Bool" Default="False" CacheSuffix="dyn" TargetShaders="all" />-->
+		<Element Name="IgnoreSDFGenerate" EnableMacroName="IGNORE_SDF_GENERATE" EnumType="Bool" Default="False" CacheSuffix="isdf" TargetShaders="all" />
+		<Element Name="ViewInstancing" EnableMacroName="VIEW_INSTANCING" EnumType="Bool" Default="False" CacheSuffix="vi" TargetShaders="all" Material="False" Condition="SupportViewInstancing">
+			<PipelineState Type="Blank">
+			</PipelineState>
+			<PipelineState Type="Overwrite">
+				<GeometryShader />
+				<ViewInstancing Count="3" Type="RenderTarget"/>
+			</PipelineState>
+		</Element>
+		<Element Name="UseMultiPass" EnableMacroName="USE_MULTI_PASS" EnumType="Bool" Default="False" CacheSuffix="ump" TargetShaders="all" Material="False" Condition="Windows|Metal">
+			<PipelineState Type="Blank">
+			</PipelineState>
+			<PipelineState Type="Overwrite">
+				<GeometryShader />
+			</PipelineState>
+		</Element>
+		<Element Name="UseConservativeRasterization" EnableMacroName="USE_CONSERVATIVE_RASTERIZATION" CacheSuffix="ucr" TargetShaders="all" EnumType="Bool" Default="False" Material="False" Mutable="False">
+			<Overriding Value="0" Type="Blank" Condition="PS5">
+				<Rasterizer DepthClampEnable="False"/>
+			</Overriding>
+			<Overriding Value="0" Type="Overwrite" Condition="!PS5">
+				<Rasterizer DepthClampEnable="False" ConservativeMode="True"/>
+			</Overriding>
+		</Element>
+	</Permutation>
+
+	<Pipeline Pass="GenerateSDFVoxelsObject" InputLayout="ObjectVertex" IndirectCommandLayout="ObjectIndirectCommand">
+		<Define Name="USE_DRAW_INDEX_AS_MATERIAL_PARAMTERS_VIEW_INDEX" Value="1" CacheSuffix="diamp" TargetShaders="all" />
+		<Define Name="GENERATE_RADIANCE_VOXEL_UPDATE_LIST" Value="1" CacheSuffix="grv" TargetShaders="ps" />
+		<Permutation>
+			<Element Name="VertexVelocity" EnableMacroName="VERTEX_VELOCITY" EnumType="Bool" Default="False" CacheSuffix="vv" TargetShaders="vs" />
+			<Element Name="UseSDFMaterial" EnableMacroName="USE_SDF_MATERIAL" EnumType="Bool" Default="False" Mutable="False" CacheSuffix="usm" TargetShaders="ps">
+				<Overriding Value="True" DivergentLevel="Material" StateOverrideMethod="Blank"/>
+			</Element>
+			<Element Name="MaterialID" Default="None" Mutable="false" CacheSuffix="smi">
+				<PipelineState Value="None" Type="Blank"/>
+				<PipelineState Value="ThinGeometry" Type="Overwrite">
+					<Define Name="THIN_GEOMETRY" Value="1" CacheSuffix="tg" TargetShaders="all"/>
+				</PipelineState>
+			</Element>
+			<Element Name="UseEmissive" EnableMacroName="EMISSIVE" EnumType="Bool"  Default="False" TargetShaders="all" Mutable="true" CacheSuffix="em" >
+				<PipelineState Type="Blank"></PipelineState>
+				<PipelineState Type="Overwrite">
+					<Define Name="EMISSIVE" Value="1" CacheSuffix="em" TargetShaders="all"/>
+				</PipelineState>
+			</Element>
+			<Element Name="UsePrimitiveShader" EnableMacroName="USE_PRIMITIVE_SHADER" EnumType="Bool" Default="False" CacheSuffix="ups" TargetShaders="all" Material="False" Condition="PrimitiveShader">
+				<PipelineState Type="Overwrite">
+					<PrimitiveShader />
+				</PipelineState>
+				<PipelineState Type="Overwrite">
+					<VertexShader />
+					<GeometryShader />
+				</PipelineState>
+			</Element>
+		</Permutation>
+		<VertexShader Filename="VoxelGlobalIlluminationGenerateFromObjects.hlsl" EntryPoint="GenerateVoxelsObjectVS" />
+		<GeometryShader Filename="VoxelGlobalIlluminationGenerateFromObjects.hlsl" EntryPoint="GenerateVoxelsObjectGS" />
+		<PrimitiveShader Filename="VoxelGlobalIlluminationGenerateFromObjects.hlsl" EntryPoint="GenerateVoxelsObjectRS" />
+		<PixelShader Filename="VoxelGlobalIlluminationGenerateFromObjects.hlsl" EntryPoint="GenerateSDFVoxelsObjectPS" />
+		<DepthState DepthFunc="Always"/>
+		<CullMode Mode="None" />
+	</Pipeline>
+
+	<Pipeline Pass="GenerateSDFVoxelsObjectSimple" InputLayout="ObjectVertex" IndirectCommandLayout="ObjectIndirectCommand">
+		<Define Name="USE_DRAW_INDEX_AS_MATERIAL_PARAMTERS_VIEW_INDEX" Value="1" CacheSuffix="diamp" TargetShaders="all" />
+		<Define Name="USE_SDF_MATERIAL" Value="0" CacheSuffix="usm" TargetShaders="ps" />
+		<Define Name="GENERATE_RADIANCE_VOXEL_UPDATE_LIST" Value="1" CacheSuffix="grv" TargetShaders="ps" />
+		<Permutation>
+			<Element Name="UsePrimitiveShader" EnableMacroName="USE_PRIMITIVE_SHADER" EnumType="Bool" Default="False" CacheSuffix="ups" TargetShaders="all" Material="False" Condition="PrimitiveShader">
+				<PipelineState Type="Overwrite">
+					<PrimitiveShader />
+				</PipelineState>
+				<PipelineState Type="Overwrite">
+					<VertexShader />
+					<GeometryShader />
+				</PipelineState>
+			</Element>
+		</Permutation>
+		<VertexShader Filename="VoxelGlobalIlluminationGenerateFromObjects.hlsl" EntryPoint="GenerateVoxelsObjectVS" />
+		<GeometryShader Filename="VoxelGlobalIlluminationGenerateFromObjects.hlsl" EntryPoint="GenerateVoxelsObjectGS" />
+		<PrimitiveShader Filename="VoxelGlobalIlluminationGenerateFromObjects.hlsl" EntryPoint="GenerateVoxelsObjectRS" />
+		<PixelShader Filename="VoxelGlobalIlluminationGenerateFromObjects.hlsl" EntryPoint="GenerateSDFVoxelsObjectPS" />
+		<DepthState DepthFunc="Always"/>
+		<CullMode Mode="None" />
+	</Pipeline>
+
+	<Pipeline Pass="GenerateSDFVoxelsObjectSDFOnly" InputLayout="ObjectVertex" IndirectCommandLayout="ObjectIndirectCommand">
+		<Define Name="USE_DRAW_INDEX_AS_MATERIAL_PARAMTERS_VIEW_INDEX" Value="1" CacheSuffix="diamp" TargetShaders="all" />
+		<Define Name="USE_SDF_MATERIAL" Value="0" CacheSuffix="usm" TargetShaders="ps" />
+		<Define Name="GENERATE_RADIANCE_VOXEL_UPDATE_LIST" Value="0" CacheSuffix="grv" TargetShaders="ps" />
+		<Permutation>
+			<Element Name="UsePrimitiveShader" EnableMacroName="USE_PRIMITIVE_SHADER" EnumType="Bool" Default="False" CacheSuffix="ups" TargetShaders="all" Material="False" Condition="PrimitiveShader">
+				<PipelineState Type="Overwrite">
+					<PrimitiveShader />
+				</PipelineState>
+				<PipelineState Type="Overwrite">
+					<VertexShader />
+					<GeometryShader />
+				</PipelineState>
+			</Element>
+		</Permutation>
+		<VertexShader Filename="VoxelGlobalIlluminationGenerateFromObjects.hlsl" EntryPoint="GenerateVoxelsObjectVS" />
+		<GeometryShader Filename="VoxelGlobalIlluminationGenerateFromObjects.hlsl" EntryPoint="GenerateVoxelsObjectGS" />
+		<PrimitiveShader Filename="VoxelGlobalIlluminationGenerateFromObjects.hlsl" EntryPoint="GenerateVoxelsObjectRS" />
+		<PixelShader Filename="VoxelGlobalIlluminationGenerateFromObjects.hlsl" EntryPoint="GenerateSDFVoxelsObjectPS" />
+		<DepthState DepthFunc="Always"/>
+		<CullMode Mode="None" />
+	</Pipeline>
+<!--
+	<Pipeline Pass="GenerateSDFVoxelsCharacter" InputLayout="CharacterVertex" Condition="ConditionalRTIndexInVertexOrTessellationShader">
+		<Define Name="VOXEL_PIPELINE" Value="1" CacheSuffix="vp" TargetShaders="all"/>
+		<VertexShader Filename="Character.hlsl" EntryPoint="VSMain_GenerateSDFVoxels" />
+		<GeometryShader Filename="Character.hlsl" EntryPoint="GSMain_GenerateSDFVoxels" />
+		<PixelShader Filename="Character.hlsl" EntryPoint="PSMain_GenerateSDFVoxels" />
+		<DepthState DepthFunc="Always"/>
+		<CullMode Mode="None" />
+	</Pipeline>
+-->
+	<Pipeline Pass="GenerateSDFVoxelsTerrain" InputLayout="TerrainTileIndexedVertex">
+		<Define Name="USE_DRAW_INDEX_AS_MATERIAL_PARAMTERS_VIEW_INDEX" Value="1" CacheSuffix="diamp" TargetShaders="all" />
+		<Define Name="USE_DISPLACEMENT" Value="1" CacheSuffix="disp" TargetShaders="all"/>
+		<Define Name="DISTANCE_TILE_SCALE_TYPE" Value="0" CacheSuffix="udts" TargetShaders="all"/>
+		<Define Name="USE_TERRAIN_HEIGHT_SHADE_FOR_VS" Value="1" CacheSuffix="utsl" TargetShaders="vs"/>
+		<Permutation>
+			<Element Name="UseTerrainVirtualTexturing" EnableMacroName="USE_TERRAIN_VIRTUAL_TEXTURING" EnumType="Bool" Default="True" CacheSuffix="utvt" TargetShaders="ps" Material="false" />
+		</Permutation>
+		<VertexShader Filename="VoxelGlobalIlluminationGenerateFromTerrain.hlsl" EntryPoint="TerrainHeightTileVoxelVS" />
+		<GeometryShader Filename="VoxelGlobalIlluminationGenerateFromTerrain.hlsl" EntryPoint="GenerateVoxelsTerrainGS" />
+		<PixelShader Filename="VoxelGlobalIlluminationGenerateFromTerrain.hlsl" EntryPoint="GenerateSDFVoxelsTerrainPS" />
+		<DepthState DepthFunc="Always"/>
+		<CullMode Mode="None" />
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="VoxelGlobalIlluminationGenerateScatteringSDFVoxels" FrameBuffer="ScatteringSDFVoxels" Condition="MultiDraw|OptionalBarycentric">
+	<Permutation>
+		<Element Name="AlphaTest" EnableMacroName="ALPHA_TEST" EnumType="Bool" Default="False" CacheSuffix="at" TargetShaders="all" />
+		<Element Name="CalcTriangleInGS" EnableMacroName="CALC_TRIANGLE_IN_GEOMETRY_SHADER" CacheSuffix="tgs" TargetShaders="all" EnumType="Integer" Default="0" Material="False" Mutable="False">
+			<Overriding Value="0" Type="Blank" Condition="!PS5"/>
+			<Overriding Value="0" Type="Overwrite" Condition="PS5">
+				<GeometryShader Filename="Character.hlsl" EntryPoint="GSMain_GenerateScatteringSDFVoxels" />
+			</Overriding>
+		</Element>
+
+	</Permutation>
+
+	<Pipeline Pass="GenerateScatteringSDFVoxelsCharacter" InputLayout="CharacterVertex" Condition="ConditionalRTIndexInVertexOrTessellationShader">
+		<Define Name="VOXEL_PIPELINE" Value="1" CacheSuffix="vp" TargetShaders="all"/>
+		<Define Name="SKINNED_MESH_TECHNIQUE" Value="1" CacheSuffix="smtf" TargetShaders="all"/>
+		<VertexShader Filename="Character.hlsl" EntryPoint="VSMain_GenerateScatteringVoxels" />
+		<PixelShader Filename="Character.hlsl" EntryPoint="PSMain_GenerateScatteringSDFVoxels" />
+		<DepthState DepthFunc="Always"/>
+		<CullMode Mode="None" />
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="VoxelGlobalIlluminationGenerateScatteringVoxels" FrameBuffer="ScatteringVoxels" AutoUpdateMaterialConfigs="False" Condition="MultiDraw|OptionalBarycentric">
+	<Permutation>
+		<Element Name="AlphaTest" EnableMacroName="ALPHA_TEST" EnumType="Bool" Default="False" CacheSuffix="at" TargetShaders="all" />
+		<Element Name="UseInlineRaytracing" EnableMacroName="USE_INLINE_RAYTRACING" EnumType="Bool" Default="False" CacheSuffix="rt" TargetShaders="ps" Material="False">
+			<Overriding Value="True" BuildTriggerType="Deferred" StateOverrideMethod="Blank"/>
+		</Element>
+	</Permutation>
+
+	<Pipeline Pass="GenerateScatteringVoxelsCharacterHair" InputLayout="CharacterVertex" Condition="ConditionalTextureMSArray|ConditionalRTIndexInVertexOrTessellationShader">
+		<Define Name="VOXEL_PIPELINE" Value="1" CacheSuffix="vp" TargetShaders="all"/>
+		<Define Name="RT_INDEX_IN_VS" Value="1" CacheSuffix="ri" TargetShaders="all"/>
+		<Define Name="SKINNED_MESH_TECHNIQUE" Value="1" CacheSuffix="smtf" TargetShaders="all"/>
+		<VertexShader Filename="Character.hlsl" EntryPoint="VSMain_GenerateScatteringVoxels" />
+		<PixelShader Filename="Character.hlsl" EntryPoint="PSMain_GenerateScatteringVoxelsHair" />
+		<DepthState DepthFunc="Always"/>
+		<CullMode Mode="None" />
+	</Pipeline>
+
+	<Pipeline Pass="GenerateScatteringVoxelsCharacterHairStrand" InputLayout="CharacterVertex" Condition="ConditionalTextureMSArray|ConditionalRTIndexInVertexOrTessellationShader">
+		<Define Name="VOXEL_PIPELINE" Value="1" CacheSuffix="vp" TargetShaders="all"/>
+		<Define Name="RT_INDEX_IN_VS" Value="1" CacheSuffix="ri" TargetShaders="all"/>
+		<Define Name="SKINNED_MESH_TECHNIQUE" Value="1" CacheSuffix="smtf" TargetShaders="all"/>
+		<VertexShader Filename="Character.hlsl" EntryPoint="VSMain_GenerateScatteringVoxels" />
+		<PixelShader Filename="Character.hlsl" EntryPoint="PSMain_GenerateScatteringVoxelsHair" />
+		<DepthState DepthFunc="Always"/>
+		<CullMode Mode="None" />
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="SceneGeometryWireframeRenderPass" FrameBuffer="SceneColorTempWithDepth" Condition="Windows">
+	<Pipeline Pass="GeometryObject" Condition="MultiDraw">
+		<Define Name="USE_INSTANCING" Value="0" CacheSuffix="ui" TargetShaders="vs"/>
+		<Permutation>
+			<Element Name="UseObjectIndexBuffer" EnableMacroName="USE_OBJECT_INDEX_BUFFER" EnumType="Bool" Default="False" CacheSuffix="uoib" TargetShaders="vs" />
+			<Element Name="TransposeMatrix" EnableMacroName="TRANSPOSE_MATRIX" EnumType="Bool" Default="False" CacheSuffix="tm" TargetShaders="vs" />
+			<Element Name="UseInstanceDataBuffer" EnableMacroName="USE_INSTACE_DATA_BUFFER" EnumType="Bool" Default="False" CacheSuffix="uidb" TargetShaders="vs" />
+		</Permutation>
+		<VertexShader Filename="Geometry.hlsl" EntryPoint="GeometryVS" />
+		<PixelShader Filename="Geometry.hlsl" EntryPoint="GeometryForwardPS" />
+		<InputElement Topology="TriangleList">
+			<VertexElement Element="Position" Format="R32G32B32A32_FLOAT" InputClass="Vertex" />
+			<VertexElement Element="Normal" Format="R32G32B32_FLOAT" InputClass="Vertex" />
+			<VertexElement Element="TexCoord0" Format="R32G32_FLOAT" InputClass="Vertex" />
+		</InputElement>
+		<FillMode Mode="Wireframe"/>
+	</Pipeline>
+
+	<Pipeline Pass="GeometryObjectInstancing">
+		<Define Name="USE_INSTANCING" Value="1" CacheSuffix="ui" TargetShaders="vs"/>
+		<Permutation>
+			<Element Name="UseObjectIndexBuffer" EnableMacroName="USE_OBJECT_INDEX_BUFFER" EnumType="Bool" Default="False" CacheSuffix="uoib" TargetShaders="vs" />
+			<Element Name="TransposeMatrix" EnableMacroName="TRANSPOSE_MATRIX" EnumType="Bool" Default="False" CacheSuffix="tm" TargetShaders="vs" />
+			<Element Name="UseInstanceDataBuffer" EnableMacroName="USE_INSTACE_DATA_BUFFER" EnumType="Bool" Default="False" CacheSuffix="uidb" TargetShaders="vs" />
+			<Element Name="UseDepthTest" EnableMacroName="NO_DEPTH_TEST" EnumType="Bool" Default="False" CacheSuffix="ndt" TargetShaders="all">
+				<PipelineState Type="Overwrite">
+					<DepthState DepthWrite="False" DepthEnable="False"/>
+				</PipelineState>
+			</Element>
+		</Permutation>
+		<VertexShader Filename="Geometry.hlsl" EntryPoint="GeometryVS" />
+		<PixelShader Filename="Geometry.hlsl" EntryPoint="GeometryForwardPS" />
+		<InputElement Topology="TriangleList">
+			<VertexElement Element="Position" Format="R32G32B32A32_FLOAT" InputClass="Vertex" />
+			<VertexElement Element="Normal" Format="R32G32B32_FLOAT" InputClass="Vertex" />
+			<VertexElement Element="TexCoord0" Format="R32G32_FLOAT" InputClass="Vertex" />
+		</InputElement>
+		<FillMode Mode="Wireframe"/>
+		<!--<Rasterizer AntialiasedLineEnable="True" />-->
+	</Pipeline>
+
+	<Pipeline Pass="GeometryMeshletMS" Condition="MeshShader">
+		<Permutation>
+			<Element Name="TransposeMatrix" EnableMacroName="TRANSPOSE_MATRIX" EnumType="Bool" Default="False" CacheSuffix="tm" TargetShaders="as|ms" />
+			<Element Name="UseInstanceDataBuffer" EnableMacroName="USE_INSTACE_DATA_BUFFER" EnumType="Bool" Default="False" CacheSuffix="uidb" TargetShaders="as|ms" />
+		</Permutation>
+		<AmplificationShader Filename="Geometry.hlsl" EntryPoint="MeshletVisibilityAS" />
+		<MeshShader Filename="Geometry.hlsl" EntryPoint="GeometryMeshletMS" />
+		<PixelShader Filename="Geometry.hlsl" EntryPoint="GeometryForwardPS" />
+		<FillMode Mode="Wireframe"/>
+		<!--<Rasterizer AntialiasedLineEnable="True" />-->
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="VoxelGlobalIlluminationVisualizeClipmaps" FrameBuffer="SceneColorWithDepth">
+	<Pipeline Pass="VisualizeClipmaps">
+		<Define Name="VISUALIZE_RADIANCE_WITH_DIRECTION" Value="1" CacheSuffix="vrd" TargetShaders="gs"/>
+		<VertexShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizeVS"/>
+		<GeometryShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizeGS"/>
+		<PixelShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizePS"/>
+		<InputElement Topology="PointList">
+			<VertexElement Element="Position" Format="R32G32B32_FLOAT" InputClass="Vertex"/>
+		</InputElement>
+		<BlendState AlphaBlend="Alpha"/>
+	</Pipeline>
+
+	<Pipeline Pass="VisualizeClipmapsNoDepthWrite">
+		<Define Name="VISUALIZE_RADIANCE_WITH_DIRECTION" Value="1" CacheSuffix="vrd" TargetShaders="gs"/>
+		<VertexShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizeVS"/>
+		<GeometryShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizeGS"/>
+		<PixelShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizePS"/>
+		<InputElement Topology="PointList">
+			<VertexElement Element="Position" Format="R32G32B32_FLOAT" InputClass="Vertex"/>
+		</InputElement>
+		<BlendState AlphaBlend="Alpha"/>
+		<DepthState DepthWrite="False"/>
+	</Pipeline>
+
+	<Pipeline Pass="VisualizeAxisAlignedDistances">
+		<VertexShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizeAxisAlignedDistancesVS"/>
+		<GeometryShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizeGS"/>
+		<PixelShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizePS"/>
+		<InputElement Topology="PointList">
+			<VertexElement Element="Position" Format="R32G32B32_FLOAT" InputClass="Vertex"/>
+		</InputElement>
+		<BlendState AlphaBlend="Alpha"/>
+		<DepthState DepthWrite="False"/>
+	</Pipeline>
+
+	<Pipeline Pass="VisualizeIndirectCacheClipmaps">
+		<Define Name="VISUALIZE_RADIANCE_WITH_DIRECTION" Value="2" CacheSuffix="vrd" TargetShaders="gs"/>
+		<VertexShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizeIndirectCacheClipmapsVS"/>
+		<GeometryShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizeGS"/>
+		<PixelShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizePS"/>
+		<InputElement Topology="PointList">
+			<VertexElement Element="Position" Format="R32G32B32_FLOAT" InputClass="Vertex"/>
+		</InputElement>
+		<BlendState AlphaBlend="Alpha"/>
+	</Pipeline>
+
+	<Pipeline Pass="VisualizeSkyVisibilityClipmaps">
+		<VertexShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizeSkyVisibilityClipmapsVS"/>
+		<GeometryShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizeGS"/>
+		<PixelShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizePS"/>
+		<InputElement Topology="PointList">
+			<VertexElement Element="Position" Format="R32G32B32_FLOAT" InputClass="Vertex"/>
+		</InputElement>
+		<BlendState AlphaBlend="Alpha"/>
+		<DepthState DepthWrite="False"/>
+	</Pipeline>
+
+	<Pipeline Pass="VisualizeSurfels">
+		<VertexShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizeSurfelsVS"/>
+		<GeometryShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizeSurfelsGS"/>
+		<PixelShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizeSurfelsPS"/>
+		<InputElement Topology="PointList">
+			<VertexElement Element="Position" Format="R32G32B32_FLOAT" InputClass="Vertex"/>
+		</InputElement>
+		<BlendState AlphaBlend="Alpha"/>
+		<DepthState DepthWrite="False"/>
+		<CullMode Mode="None" />
+	</Pipeline>
+
+	<Pipeline Pass="VisualizeSDFVoxels" InputLayout="FullScreenVertex">
+		<Define Name="CALC_CHARACTER_OCCLUSIONS" Value="1" CacheSuffix="cco" TargetShaders="ps"/>
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="VoxelGlobalIlluminationDiffuseGI.hlsl" EntryPoint="VisualizeSDFVoxelsPS"/>
+		<DepthState DepthWrite="False" DepthEnable="False"/>
+	</Pipeline>
+
+	<Pipeline Pass="VisualizeSDFGradient" InputLayout="FullScreenVertex" BuildTriggerType="Required">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="VoxelGlobalIlluminationDiffuseGI.hlsl" EntryPoint="VisualizeSDFGradientPS"/>
+		<DepthState DepthWrite="False" DepthEnable="False"/>
+	</Pipeline>
+
+	<Pipeline Pass="VisualizeRaymarchedRadiance" InputLayout="FullScreenVertex" Condition="ConditionalTextureMSArray">
+		<Permutation>
+			<Element Name="UseSurfelRadiance" EnableMacroName="USE_SURFEL_RADIANCE" EnumType="Bool" Default="False" CacheSuffix="usr" TargetShaders="ps" />
+		</Permutation>
+		<Define Name="CALC_CHARACTER_OCCLUSIONS" Value="1" CacheSuffix="cco" TargetShaders="ps"/>
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="VoxelGlobalIlluminationDiffuseGI.hlsl" EntryPoint="VisualizeRaymarchedRadiancePS"/>
+		<DepthState DepthWrite="False" DepthEnable="False"/>
+	</Pipeline>
+
+	<Pipeline Pass="VisualizeRaytracedRadiancePS" InputLayout="FullScreenVertex">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="VoxelGlobalIlluminationDiffuseGI.hlsl" EntryPoint="VisualizeRaytracedRadiancePS"/>
+		<DepthState DepthWrite="False" DepthEnable="False"/>
+	</Pipeline>
+
+	<Pipeline Pass="VisualizeAudioOcclusion" InputLayout="FullScreenVertex" Condition="ConditionalTextureMSArray">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="AudioCommon.hlsl" EntryPoint="VisualizeAudioOcclusionPS"/>
+		<DepthState DepthWrite="False" DepthEnable="False"/>
+	</Pipeline>
+
+	<Pipeline Pass="VisualizeScatteringVoxels" InputLayout="FullScreenVertex">
+		<VertexShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizeScatteringVoxelsVS"/>
+		<GeometryShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizeScatteringVoxelsGS"/>
+		<PixelShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizePS"/>
+		<InputElement Topology="PointList">
+			<VertexElement Element="Position" Format="R32G32B32_FLOAT" InputClass="Vertex"/>
+		</InputElement>
+		<BlendState AlphaBlend="Alpha"/>
+		<DepthState DepthWrite="False"/>
+	</Pipeline>
+
+	<Pipeline Pass="VisualizeScatteringSDFVoxels" InputLayout="FullScreenVertex">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="VoxelGlobalIlluminationVisualize.hlsl" EntryPoint="VisualizeScatteringSDFVoxelsPS"/>
+		<DepthState DepthWrite="False" DepthEnable="False"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="TestRenderPassForProfiling">
+	<Pipeline Pass="TestComputeShaderForProfiling">
+		<ComputeShader Filename="TestShadersForProfiling.hlsl" EntryPoint="TestComputeShaderForProfilingCS"/>
+	</Pipeline>
+</RenderPass>

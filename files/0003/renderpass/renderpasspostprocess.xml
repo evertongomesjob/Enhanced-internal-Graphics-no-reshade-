@@ -1,0 +1,550 @@
+﻿<FrameBuffer Name="FFTBloomKernel">
+	<PostProcessingBloomFFTKernelReal/>
+</FrameBuffer>
+
+<FrameBuffer Name="TrailDeformedBlur">
+	<SceneTrailDeformedBlur0/>
+</FrameBuffer>
+
+<FrameBuffer Name="DeformedLightAttenuation">
+	<DeformedLightAttenutation/>
+</FrameBuffer>
+
+<FrameBuffer Name="LensFlare">
+	<PostProcessingLensFlare0/>
+</FrameBuffer>
+
+<FrameBuffer Name="AfterFGPostProcess">
+	<SceneColorAfterFGPostProcess/>
+</FrameBuffer>
+
+<RenderPass Name="ClearTexture">
+	<Pipeline Pass="ClearTexture" >
+		<ComputeShader Filename="PostProcess.hlsl" EntryPoint="ClearTextureCS" />
+	</Pipeline>
+
+	<Pipeline Pass="ClearTextureAlpha" >
+		<ComputeShader Filename="PostProcess.hlsl" EntryPoint="ClearTextureAlphaCS" />
+	</Pipeline>
+
+	<Pipeline Pass="ClearTextureMS" InputLayout="FullScreenVertex">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcess.hlsl" EntryPoint="ClearTexturePS" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="4" />
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="PostProcessTemporalAA" FrameBuffer="SceneColor">
+	<Define Name="USE_PRE_EXPOSURE" Value="0" CacheSuffix="prexp" TargetShaders="ps|cs" />
+
+	<Pipeline Pass="TemporalAA" >
+		<Permutation>
+			<Element Name="UseCoarsePixelShadingSupersampling" EnableMacroName="USE_COARSE_PIXEL_SHADING_SUPERSAMPLING" EnumType="Bool" Default="False" CacheSuffix="cps" TargetShaders="cs" Material="False" />
+			<Element Name="UpdateAfterTAATarget" EnableMacroName="UPDATE_AFTER_TAA_TARGET" EnumType="Bool" Default="False" CacheSuffix="uatt" TargetShaders="cs" Material="False" />
+		</Permutation>
+		<ComputeShader Filename="PostProcess.hlsl" EntryPoint="TemporalAACS" />
+	</Pipeline>
+
+	<Pipeline Pass="TemporalAAUpsampleCS" >
+		<Permutation>
+			<Element Name="UseSampler" EnableMacroName="USE_SAMPLER" EnumType="Bool" Default="False" CacheSuffix="us" TargetShaders="cs" />
+			<!--<Element Name="UseCoarsePixelShadingSupersampling" EnableMacroName="USE_COARSE_PIXEL_SHADING_SUPERSAMPLING" EnumType="Bool" Default="False" CacheSuffix="cps" TargetShaders="cs" Material="False" />-->
+			<Element Name="UseBicubicUpsampling" EnableMacroName="USE_BICUBIC_UPSAMPLING" EnumType="Bool" Default="False" CacheSuffix="ubcu" TargetShaders="cs" Material="False" />
+			<Element Name="UseBilateralWeights" EnableMacroName="USE_BILATERAL_WEIGHTS" EnumType="Bool" Default="False" CacheSuffix="ubw" TargetShaders="cs" Material="False" />
+			<Element Name="UpdateAfterTAATarget" EnableMacroName="UPDATE_AFTER_TAA_TARGET" EnumType="Bool" Default="False" CacheSuffix="uatt" TargetShaders="cs" Material="False" />
+			<Element Name="IsLowQuality" EnableMacroName="IS_LOW_QUALITY" EnumType="Bool" Default="False" CacheSuffix="lq" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="PostProcess.hlsl" EntryPoint="TemporalAAUpsampleCS" />
+	</Pipeline>
+
+	<Pipeline Pass="TemporalAAUpsamplePS" InputLayout="FullScreenVertex" >
+		<Permutation>
+			<Element Name="UseSampler" EnableMacroName="USE_SAMPLER" EnumType="Bool" Default="False" CacheSuffix="us" TargetShaders="ps" />
+			<!--<Element Name="UseCoarsePixelShadingSupersampling" EnableMacroName="USE_COARSE_PIXEL_SHADING_SUPERSAMPLING" EnumType="Bool" Default="False" CacheSuffix="cps" TargetShaders="ps" Material="False" />-->
+			<Element Name="UseBicubicUpsampling" EnableMacroName="USE_BICUBIC_UPSAMPLING" EnumType="Bool" Default="False" CacheSuffix="ubcu" TargetShaders="ps" Material="False" />
+			<Element Name="UseBilateralWeights" EnableMacroName="USE_BILATERAL_WEIGHTS" EnumType="Bool" Default="False" CacheSuffix="ubw" TargetShaders="ps" Material="False" />
+			<Element Name="UpdateAfterTAATarget" EnableMacroName="UPDATE_AFTER_TAA_TARGET" EnumType="Bool" Default="False" CacheSuffix="uatt" TargetShaders="ps" Material="False" />
+			<Element Name="IsLowQuality" EnableMacroName="IS_LOW_QUALITY" EnumType="Bool" Default="True" CacheSuffix="lq" TargetShaders="ps" />
+		</Permutation>
+		<Define Name="IS_PIXEL_SHADER" Value="1" CacheSuffix="ips" TargetShaders="ps" />
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcess.hlsl" EntryPoint="TemporalAAUpsamplePS" />
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="PostProcess" FrameBuffer="SceneColor">
+	<Define Name="USE_PRE_EXPOSURE" Value="0" CacheSuffix="prexp" TargetShaders="ps|cs" />
+	<Define Name="ENABLE_COLOR_CORRECTION" Value="0" CacheSuffix="ecc" TargetShaders="ps" />
+
+	<FrameBufferBinding Name="SceneDeformedHeight" FrameBuffer="SceneDeformedHeight"/>
+	<FrameBufferBinding Name="FFTBloomKernel" FrameBuffer="FFTBloomKernel"/>
+	<FrameBufferBinding Name="DistortionOffset" FrameBuffer="DistortionOffset"/>
+	<FrameBufferBinding Name="BackBuffer" FrameBuffer="BackBuffer"/>
+	<FrameBufferBinding Name="TrailDeformedBlur" FrameBuffer="TrailDeformedBlur"/>
+	<FrameBufferBinding Name="DeformedLightAttenuation" FrameBuffer="DeformedLightAttenuation"/>
+	<FrameBufferBinding Name="LensFlare" FrameBuffer="LensFlare"/>
+	<FrameBufferBinding Name="AfterFG" FrameBuffer="AfterFGPostProcess" ClearTarget="RenderTargets"/>
+
+	<Pipeline Pass="ComputeDisplayRenderingTransformLUT" >
+		<ComputeShader Filename="PostProcess.hlsl" EntryPoint="csComputeDisplayRenderingTransformLUT" />
+	</Pipeline>
+
+	<Pipeline Pass="PointUpscale" InputLayout="FullScreenVertex">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcess.hlsl" EntryPoint="PointUpscalePS" />
+	</Pipeline>
+
+	<Pipeline Pass="BilinearUpscale" InputLayout="FullScreenVertex">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcess.hlsl" EntryPoint="BilinearUpscalePS" />
+	</Pipeline>
+
+	<!-- PostProcessPingPong -->
+	<Pipeline Pass="PostProcessSceneBlur" InputLayout="FullScreenVertex" BuildTriggerType="Required">
+		<Permutation>
+			<Element Name="ENABLE_ALPHA_BLEND" EnableMacroName="ENABLE_ALPHA_BLEND" EnumType="Bool" Default="False" CacheSuffix="at" TargetShaders="vs|ps" >
+				<PipelineState Type="Blank"></PipelineState>
+				<PipelineState Type="Attach">
+					<BlendState AlphaBlend="PremultipliedAlpha" ColorWrite="RGB" />
+				</PipelineState>
+			</Element>
+			<Element Name="IsSinglePass" EnableMacroName="IS_SINGLE_PASS" EnumType="Bool" Default="False" CacheSuffix="sp" TargetShaders="vs|ps" />
+		</Permutation>
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcessPingPong.hlsl" EntryPoint="PostProcessSceneBlurPS" />
+		<DepthState DepthEnable="False" />
+		<StencilState StencilEnable="False" />
+	</Pipeline>
+
+	<Pipeline Pass="PostProcessRadialBlur" InputLayout="FullScreenVertex">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcessPingPong.hlsl" EntryPoint="PostProcessRadialBlurPS" />
+	</Pipeline>
+
+	<Pipeline Pass="PostProcessOnePassBlur" InputLayout="FullScreenVertex">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcessPingPong.hlsl" EntryPoint="PostProcessOnePassBlurPS" />
+	</Pipeline>
+
+	<Pipeline Pass="GaussianBlur9Tab" InputLayout="FullScreenVertex" BuildTriggerType="Required">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcessPingPong.hlsl" EntryPoint="GaussianBlur9TabPS" />
+	</Pipeline>
+	
+	<Pipeline Pass="GaussianBlur9TabSimple" InputLayout="FullScreenVertex" FrameBufferBindingName="TrailDeformedBlur">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcessPingPong.hlsl" EntryPoint="GaussianBlur9TabSimplePS" />
+	</Pipeline>
+	
+	<Pipeline Pass="GaussianBlur9TabSimpleR8" InputLayout="FullScreenVertex" FrameBufferBindingName="DeformedLightAttenuation">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcessPingPong.hlsl" EntryPoint="GaussianBlur9TabSimpleR8PS" />
+	</Pipeline>
+
+	<!-- PostProcessGlare -->
+	<Pipeline Pass="BloomAndLumaExtract" >
+		<Permutation>
+			<Element Name="UseSimpleMode" EnableMacroName="USE_SIMPLE_MODE" EnumType="Bool" Default="True" CacheSuffix="usm" TargetShaders="cs" Material="False" />
+			<Element Name="UseColorAdaptation" EnableMacroName="USE_COLOR_ADAPTATION" EnumType="Bool" Default="True" CacheSuffix="uca" TargetShaders="cs" Material="False" />
+		</Permutation>
+		<ComputeShader Filename="PostProcessGlare.hlsl" EntryPoint="BloomAndLumaExtractCS" />
+	</Pipeline>
+
+	<Pipeline Pass="BloomExtract" >
+		<ComputeShader Filename="PostProcessGlare.hlsl" EntryPoint="BloomExtractCS" />
+	</Pipeline>
+
+	<Pipeline Pass="Downsample" >
+		<Permutation>
+			<Element Name="BloomTextureCount" EnableMacroName="BLOOM_TEXTURE_COUNT" EnumType="Integer" Count="7" Default="False" Material="False" CacheSuffix="btc" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="PostProcessGlare.hlsl" EntryPoint="DownsampleCS" />
+	</Pipeline>
+
+	<Pipeline Pass="ExtractAdaptationTintColor" >
+		<ComputeShader Filename="PostProcessGlare.hlsl" EntryPoint="ExtractAdaptationTintColorCS" />
+	</Pipeline>
+
+	<Pipeline Pass="ResetCounterBuffer" >
+		<ComputeShader Filename="PostProcess.hlsl" EntryPoint="ResetCounterBuffer" />
+	</Pipeline>
+	
+	<Pipeline Pass="UpsampleAndBlur" Condition="ConditionalTextureMSArray">
+		<Permutation>
+			<Element Name="UseAdditiveBloom" EnableMacroName="USE_ADDITIVE_BLOOM" EnumType="Bool" Default="False" CacheSuffix="uab" TargetShaders="cs" Material="False" />
+			<Element Name="MergeAdaptExposure" EnableMacroName="MERGE_ADAPT_EXPOSURE" EnumType="Bool" Default="False" CacheSuffix="mae" TargetShaders="cs" Material="False" />
+		</Permutation>
+		<ComputeShader Filename="PostProcessGlare.hlsl" EntryPoint="UpsampleAndBlurCS" />
+	</Pipeline>
+
+	<Pipeline Pass="RenderGlareInstance">
+		<VertexShader Filename="PostProcessGlare.hlsl" EntryPoint="RenderGlareInstanceVS" />
+		<GeometryShader Filename="PostProcessGlare.hlsl" EntryPoint="RenderGlareInstanceGS_Blade" />
+		<PixelShader Filename="PostProcessGlare.hlsl" EntryPoint="RenderGlareInstancePS_Blade" />
+    <BlendState AlphaBlend="Additive"/>
+		<InputElement Topology="PointList">
+			<VertexElement Element="Position" Format="R8_UINT" InputClass="Vertex"/>
+		</InputElement>
+	</Pipeline>
+
+	<Pipeline Pass="RenderGlareInstance2">
+		<VertexShader Filename="PostProcessGlare.hlsl" EntryPoint="RenderGlareInstanceVS" />
+		<GeometryShader Filename="PostProcessGlare.hlsl" EntryPoint="RenderGlareInstanceGS_Glare" />
+		<PixelShader Filename="PostProcessGlare.hlsl" EntryPoint="RenderGlareInstancePS_Glare" />
+		<BlendState AlphaBlend="Max"/>    
+		<InputElement Topology="PointList">
+			<VertexElement Element="Position" Format="R8_UINT" InputClass="Vertex"/>
+		</InputElement>
+	</Pipeline>
+
+	<Pipeline Pass="Blur" >
+		<ComputeShader Filename="PostProcessGlare.hlsl" EntryPoint="BlurCS" />
+	</Pipeline>
+
+	<Pipeline Pass="FastBlur9x9" >
+		<ComputeShader Filename="PostProcessGlare.hlsl" EntryPoint="FastBlur9x9CS" />
+	</Pipeline>
+
+	<Pipeline Pass="FastBlur9x9Type2" >
+		<Define Name="FAST_BLUR_TYPE_2" Value="1" CacheSuffix="fbt" TargetShaders="cs" />
+		<ComputeShader Filename="PostProcessGlare.hlsl" EntryPoint="FastBlur9x9CS" />
+	</Pipeline>
+
+	<Pipeline Pass="BlendSampledTexture" >
+		<ComputeShader Filename="PostProcessGlare.hlsl" EntryPoint="BlendSampledTextureCS" />
+	</Pipeline>
+
+	<Pipeline Pass="RenderGlareComposite" >
+		<ComputeShader Filename="PostProcessGlare.hlsl" EntryPoint="renderGlareCompositeCS" />
+	</Pipeline>
+
+	<!-- PostProcessMotionBlur -->
+	<Pipeline Pass="GenerateVelocityMaxTile" >
+		<ComputeShader Filename="PostProcessMotionBlur.hlsl" EntryPoint="GenerateVelocityMaxTileCS" />
+	</Pipeline>
+
+	<Pipeline Pass="GenerateVelocityTileNeighborhood" >
+		<ComputeShader Filename="PostProcessMotionBlur.hlsl" EntryPoint="GenerateVelocityTileNeighborhoodCS" />
+	</Pipeline>
+
+	<Pipeline Pass="MotionBlurCS" >
+		<Permutation>
+			<Element Name="UseColorAdaptation" EnableMacroName="USE_COLOR_ADAPTATION" EnumType="Bool" Default="True" CacheSuffix="uca" TargetShaders="cs" Material="False" />
+			<Element Name="IsHighQualityMotionBlur" EnableMacroName="IS_HIGH_QUALITY" EnumType="Bool" Default="True" CacheSuffix="hq" TargetShaders="cs" Material="False" />
+		</Permutation>
+		<Define Name="ENABLE_COLOR_CORRECTION" Value="1" CacheSuffix="ecc" TargetShaders="cs" />
+		<ComputeShader Filename="PostProcessMotionBlur.hlsl" EntryPoint="MotionBlurCS" />
+	</Pipeline>
+
+	<Pipeline Pass="MotionBlur" InputLayout="FullScreenVertex">
+		<Permutation>
+			<Element Name="UseColorAdaptation" EnableMacroName="USE_COLOR_ADAPTATION" EnumType="Bool" Default="False" CacheSuffix="uca" TargetShaders="ps" Material="False" />
+			<Element Name="IsHighQualityMotionBlur" EnableMacroName="IS_HIGH_QUALITY" EnumType="Bool" Default="True" CacheSuffix="hq" TargetShaders="ps" Material="False" />
+		</Permutation>
+		<Define Name="ENABLE_COLOR_CORRECTION" Value="1" CacheSuffix="ecc" TargetShaders="ps" />
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcessMotionBlur.hlsl" EntryPoint="MotionBlurPS" />
+	</Pipeline>
+
+	<!-- PostProcessDepthOfField -->
+	<Pipeline Pass="ComputeFocusDepth" >
+		<ComputeShader Filename="PostProcessDepthOfField.hlsl" EntryPoint="ComputeFocusDepth" />
+	</Pipeline>
+
+	<Pipeline Pass="ComputeCoc" >
+		<ComputeShader Filename="PostProcessDepthOfField.hlsl" EntryPoint="ComputeCocCS" />
+	</Pipeline>
+
+	<Pipeline Pass="ReprojectCoc" >
+		<ComputeShader Filename="PostProcessDepthOfField.hlsl" EntryPoint="ReprojectCocCS" />
+	</Pipeline>
+
+	<Pipeline Pass="PreFilter" >
+		<ComputeShader Filename="PostProcessDepthOfField.hlsl" EntryPoint="PreFilterCS" />
+	</Pipeline>
+
+	<Pipeline Pass="MainFilter" >
+		<ComputeShader Filename="PostProcessDepthOfField.hlsl" EntryPoint="MainFilterCS" />
+	</Pipeline>
+
+	<Pipeline Pass="PostFilter" >
+		<ComputeShader Filename="PostProcessDepthOfField.hlsl" EntryPoint="PostFilterCS" />
+	</Pipeline>
+
+	<Pipeline Pass="Combine" >
+		<ComputeShader Filename="PostProcessDepthOfField.hlsl" EntryPoint="CombineCS" />
+	</Pipeline>
+
+	<Pipeline Pass="ChromaticAberration" >
+		<ComputeShader Filename="PostProcessDepthOfField.hlsl" EntryPoint="ChromaticAberrationCS" />
+	</Pipeline>
+
+	<!-- PostProcessMaterial -->
+	<Pipeline Pass="PostProcessMaterial" InputLayout="FullScreenVertex" BuildTriggerType="Required">
+		<Permutation>
+			<Element Name="UseLocalToneMapping" EnableMacroName="USE_LOCAL_TONE_MAPPING" EnumType="Bool" Default="False" Material="False" CacheSuffix="ult" TargetShaders="ps" />
+			<Element Name="UseHDRConvert" EnableMacroName="HDR_CONVERT" EnumType="Bool" Default="False" Material="False" CacheSuffix="hdr" TargetShaders="ps" />
+			<!--<Element Name="ToneMapMode" EnableMacroName="TONE_MAP_MODE" EnumType="Integer" Count="7" Default="False" Material="False" CacheSuffix="tm" TargetShaders="ps" />
+			<Element Name="ToneMapPreview" EnableMacroName="ENABLE_TONE_MAP_PREVIEW_MODE" EnumType="Bool" Default="False" Material="False" CacheSuffix="tp" TargetShaders="ps" />-->
+		</Permutation>
+		<Define Name="PIPELINE_RENDER_POST_PROCESS" Value="1" CacheSuffix="rpp" TargetShaders="vs|ps" />
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="PostProcess.hlsl" EntryPoint="psPostProcessMaterial"/>
+		<DepthState DepthEnable="False"/>
+	</Pipeline>
+
+	<Pipeline Pass="PostProcessMaterialSize" InputLayout="FullScreenVertex" BuildTriggerType="Required">
+		<Permutation>
+			<Element Name="UseHDRConvert" EnableMacroName="HDR_CONVERT" EnumType="Bool" Default="False" Material="False" CacheSuffix="hdr" TargetShaders="ps" />
+			<!--<Element Name="ToneMapMode" EnableMacroName="TONE_MAP_MODE" EnumType="Integer" Count="7" Default="False" Material="False" CacheSuffix="tm" TargetShaders="ps" />
+			<Element Name="ToneMapPreview" EnableMacroName="ENABLE_TONE_MAP_PREVIEW_MODE" EnumType="Bool" Default="False" Material="False" CacheSuffix="tp" TargetShaders="ps" />-->
+		</Permutation>
+		<Define Name="PIPELINE_RENDER_POST_PROCESS" Value="1" CacheSuffix="rpp" TargetShaders="vs|ps" />
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="PostProcess.hlsl" EntryPoint="psPostProcessMaterial"/>
+		<DepthState DepthEnable="False"/>
+	</Pipeline>
+	
+	<Pipeline Pass="CompositeMaterial" InputLayout="FullScreenVertex" BuildTriggerType="Required">
+		<Permutation>
+			<Element Name="UseLocalToneMapping" EnableMacroName="USE_LOCAL_TONE_MAPPING" EnumType="Bool" Default="False" Material="False" CacheSuffix="ult" TargetShaders="ps" />
+			<Element Name="UseHDRConvert" EnableMacroName="HDR_CONVERT" EnumType="Bool" Default="False" Material="False" CacheSuffix="hdr" TargetShaders="ps" />
+			<!--<Element Name="ToneMapMode" EnableMacroName="TONE_MAP_MODE" EnumType="Integer" Count="7" Default="False" Material="False" CacheSuffix="tm" TargetShaders="ps" />
+			<Element Name="ToneMapPreview" EnableMacroName="ENABLE_TONE_MAP_PREVIEW_MODE" EnumType="Bool" Default="False" Material="False" CacheSuffix="tp" TargetShaders="ps" />-->
+		</Permutation>
+		<Define Name="PIPELINE_COMPOSITE_POST_PROCESS" Value="1" CacheSuffix="cpp" TargetShaders="vs|ps" />
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="PostProcess.hlsl" EntryPoint="psPostProcessCompositeMaterial"/>
+		<DepthState DepthEnable="False"/>
+	</Pipeline>
+
+	<!-- PostProcessExposure -->
+	<Pipeline Pass="LumaExtract">
+		<ComputeShader Filename="PostProcessExposure.hlsl" EntryPoint="LumaExtractCS" />
+	</Pipeline>
+
+	<Pipeline Pass="ClearHistogram">
+		<ComputeShader Filename="PostProcessExposure.hlsl" EntryPoint="ClearHistogramCS" />
+	</Pipeline>
+
+	<Pipeline Pass="GenerateHistogram">
+		<ComputeShader Filename="PostProcessExposure.hlsl" EntryPoint="GenerateHistogramCS" />
+	</Pipeline>
+
+	<Pipeline Pass="AdaptExposure" Condition="ConditionalTextureMSArray">
+		<ComputeShader Filename="PostProcessExposure.hlsl" EntryPoint="AdaptExposureCS" />
+	</Pipeline>
+		
+	<Pipeline Pass="RenderPostProcessAfterFG" InputLayout="FullScreenVertex" FrameBufferBindingName="AfterFG" BuildTriggerType="Required">
+		<Permutation>
+			<Element Name="UseHDRConvert" EnableMacroName="HDR_CONVERT" EnumType="Bool" Default="False" Material="False" CacheSuffix="hdr" TargetShaders="ps" />
+		</Permutation>
+		<VertexShader Filename="PostProcess.hlsl" EntryPoint="RenderPostProcessVS" />
+		<PixelShader Filename="PostProcess.hlsl" EntryPoint="RenderPostProcessAfterFGPS" />
+	</Pipeline>
+
+	<Pipeline Pass="VisualizeHistogram" InputLayout="FullScreenVertex" FrameBufferBindingName="BackBuffer">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcessExposure.hlsl" EntryPoint="VisualizeHistogramPS" />
+	</Pipeline>
+
+	<Pipeline Pass="RenderPostProcess" InputLayout="FullScreenVertex" FrameBufferBindingName="BackBuffer">
+		<Permutation>
+			<Element Name="Sharpen" EnableMacroName="USE_SHARPEN" EnumType="Bool" Default="True" CacheSuffix="srp" TargetShaders="ps" />
+			<Element Name="ApplyToneMapping" EnableMacroName="APPLY_TONE_MAPPING" EnumType="Bool" Default="False" CacheSuffix="atm" TargetShaders="ps" />
+			<Element Name="UseLocalToneMapping" EnableMacroName="USE_LOCAL_TONE_MAPPING" EnumType="Bool" Default="False" Material="False" CacheSuffix="ult" TargetShaders="ps" />
+			<Element Name="ToneMapMode" EnableMacroName="TONE_MAP_MODE" EnumType="Integer" Count="7" Default="False" Material="False" CacheSuffix="tm" TargetShaders="ps" />
+			<Element Name="ToneMapPreview" EnableMacroName="ENABLE_TONE_MAP_PREVIEW_MODE" EnumType="Bool" Default="False" Material="False" CacheSuffix="tp" TargetShaders="ps" />
+		</Permutation>
+		<VertexShader Filename="PostProcess.hlsl" EntryPoint="RenderPostProcessVS" />
+		<PixelShader Filename="PostProcess.hlsl" EntryPoint="RenderPostProcessPS" />
+	</Pipeline>
+
+	<Pipeline Pass="RenderPostProcessHDR" InputLayout="FullScreenVertex" FrameBufferBindingName="BackBuffer">
+		<Define Name="USE_HDR_OUTPUT" Value="1" CacheSuffix="hdr" TargetShaders="ps|cs" />
+		<Permutation>
+			<Element Name="Sharpen" EnableMacroName="USE_SHARPEN" EnumType="Bool" Default="True" CacheSuffix="srp" TargetShaders="ps" />
+			<Element Name="ApplyToneMapping" EnableMacroName="APPLY_TONE_MAPPING" EnumType="Bool" Default="False" CacheSuffix="atm" TargetShaders="ps" />
+			<Element Name="UseLocalToneMapping" EnableMacroName="USE_LOCAL_TONE_MAPPING" EnumType="Bool" Default="False" Material="False" CacheSuffix="ult" TargetShaders="ps" />
+			<Element Name="ToneMapMode" EnableMacroName="TONE_MAP_MODE" EnumType="Integer" Count="7" Default="False" Material="False" CacheSuffix="tm" TargetShaders="ps" />
+			<Element Name="ToneMapPreview" EnableMacroName="ENABLE_TONE_MAP_PREVIEW_MODE" EnumType="Bool" Default="False" Material="False" CacheSuffix="tp" TargetShaders="ps" />
+		</Permutation>
+		<VertexShader Filename="PostProcess.hlsl" EntryPoint="RenderPostProcessVS" />
+		<PixelShader Filename="PostProcess.hlsl" EntryPoint="RenderPostProcessPS" />
+	</Pipeline>
+
+	<Pipeline Pass="RenderTexture" InputLayout="FullScreenVertex" FrameBufferBindingName="BackBuffer" BuildTriggerType="Required">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcess.hlsl" EntryPoint="RenderTexturePS" />
+	</Pipeline>
+
+	<Pipeline Pass="ApplyToneMapping">
+		<Permutation>
+			<Element Name="ToneMapMode" EnableMacroName="TONE_MAP_MODE" EnumType="Integer" Count="7" Default="False" Material="False" CacheSuffix="tm" TargetShaders="cs" />
+			<Element Name="ToneMapPreview" EnableMacroName="ENABLE_TONE_MAP_PREVIEW_MODE" EnumType="Bool" Default="False" Material="False" CacheSuffix="tp" TargetShaders="cs" />
+			<Element Name="UseLocalToneMapping" EnableMacroName="USE_LOCAL_TONE_MAPPING" EnumType="Bool" Default="True" Material="False" CacheSuffix="ultm" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="PostProcess.hlsl" EntryPoint="ApplyToneMappingCS" />
+	</Pipeline>
+	
+	<Pipeline Pass="ApplyToneMappingHDR">
+		<Define Name="USE_HDR_OUTPUT" Value="1" CacheSuffix="hdr" TargetShaders="ps|cs" />
+		<Permutation>
+			<Element Name="ToneMapMode" EnableMacroName="TONE_MAP_MODE" EnumType="Integer" Count="7" Default="False" Material="False" CacheSuffix="tm" TargetShaders="cs" />
+			<Element Name="ToneMapPreview" EnableMacroName="ENABLE_TONE_MAP_PREVIEW_MODE" EnumType="Bool" Default="False" Material="False" CacheSuffix="tp" TargetShaders="cs" />
+			<Element Name="UseLocalToneMapping" EnableMacroName="USE_LOCAL_TONE_MAPPING" EnumType="Bool" Default="True" Material="False" CacheSuffix="ultm" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="PostProcess.hlsl" EntryPoint="ApplyToneMappingCS" />
+	</Pipeline>
+
+	<Pipeline Pass="LocalToneMappingLuminance">
+		<Permutation>
+			<Element Name="ToneMapMode" EnableMacroName="TONE_MAP_MODE" EnumType="Integer" Count="7" Default="False" Material="False" CacheSuffix="tm" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="PostProcess.hlsl" EntryPoint="LocalToneMappingLuminanceCS" />
+	</Pipeline>
+
+	<Pipeline Pass="LocalToneMappingExposureWeight">
+		<ComputeShader Filename="PostProcess.hlsl" EntryPoint="LocalToneMappingExposureWeightCS" />
+	</Pipeline>
+
+	<Pipeline Pass="LocalToneMappingBlend">
+		<ComputeShader Filename="PostProcess.hlsl" EntryPoint="LocalToneMappingBlendCS" />
+	</Pipeline>
+
+	<Pipeline Pass="LocalToneMappingCopy">
+		<ComputeShader Filename="PostProcess.hlsl" EntryPoint="LocalToneMappingCopyCS" />
+	</Pipeline>
+
+	<Pipeline Pass="LocalToneMappingBlendLaplacian">
+		<ComputeShader Filename="PostProcess.hlsl" EntryPoint="LocalToneMappingBlendLaplacianCS" />
+	</Pipeline>
+
+	<Pipeline Pass="LocalToneMappingCombine">
+		<Permutation>
+			<Element Name="ToneMapMode" EnableMacroName="TONE_MAP_MODE" EnumType="Integer" Count="7" Default="False" Material="False" CacheSuffix="tm" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="PostProcess.hlsl" EntryPoint="LocalToneMappingCombineCS" />
+	</Pipeline>
+
+	<Pipeline Pass="LocalToneMappingCheap">
+		<Permutation>
+			<Element Name="ToneMapMode" EnableMacroName="TONE_MAP_MODE" EnumType="Integer" Count="7" Default="False" Material="False" CacheSuffix="tm" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="PostProcess.hlsl" EntryPoint="LocalToneMappingCheapCS" />
+	</Pipeline>
+
+	<Pipeline Pass="RenderGBuffer" InputLayout="FullScreenVertex" FrameBufferBindingName="BackBuffer">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcess.hlsl" EntryPoint="RenderGBufferPS" />
+	</Pipeline>
+
+	<Pipeline Pass="RenderSceneColor" InputLayout="FullScreenVertex" FrameBufferBindingName="BackBuffer">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcess.hlsl" EntryPoint="RenderSceneColorPS" />
+	</Pipeline>
+
+	<Pipeline Pass="RenderFFTBloomKernel" InputLayout="FullScreenVertex" FrameBufferBindingName="FFTBloomKernel">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcessGlare.hlsl" EntryPoint="renderFFTBloomKernel" />
+	</Pipeline>
+
+	<Pipeline Pass="PreparePostProcessPointBlur" InputLayout="FullScreenVertex" FrameBufferBindingName="DistortionOffset" BuildTriggerType="Required">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcessPingPong.hlsl" EntryPoint="PreparePostProcessPointBlurPS" />
+		<BlendState AlphaBlend="Additive_RG"/>
+	</Pipeline>
+	<Pipeline Pass="PreparePostProcessRadialBlur" InputLayout="FullScreenVertex" FrameBufferBindingName="DistortionOffset">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcessPingPong.hlsl" EntryPoint="PreparePostProcessRadialBlurPS" />
+		<BlendState AlphaBlend="Additive_RG"/>
+	</Pipeline>
+	
+	<Pipeline Pass="LensFlareChroma" InputLayout="FullScreenVertex" FrameBufferBindingName="LensFlare">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcessLensFlare.hlsl" EntryPoint="ChromaPS" />
+	</Pipeline>
+
+	<Pipeline Pass="LensFlareGhosts" InputLayout="FullScreenVertex" FrameBufferBindingName="LensFlare">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcessLensFlare.hlsl" EntryPoint="GhostsPS" />
+	</Pipeline>
+
+	<Pipeline Pass="LensFlareHalo" InputLayout="FullScreenVertex" FrameBufferBindingName="LensFlare">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcessLensFlare.hlsl" EntryPoint="HaloPS" />
+		<BlendState AlphaBlend="Additive"/>
+	</Pipeline>
+
+	<Pipeline Pass="LensFlareBlades" FrameBufferBindingName="LensFlare">
+		<VertexShader Filename="PostProcessLensFlare.hlsl" EntryPoint="GlareBladesVS" />
+		<GeometryShader Filename="PostProcessLensFlare.hlsl" EntryPoint="GlareBladesGS" />
+		<PixelShader Filename="PostProcessLensFlare.hlsl" EntryPoint="GlareBladesPS" />
+		<InputElement Topology="PointList"/>
+		<BlendState AlphaBlend="Additive"/>
+	</Pipeline>
+
+	<Pipeline Pass="LensFlareBladesIndirect" FrameBufferBindingName="LensFlare">
+		<Define Name="USE_GATHER_POSITION" Value="1" CacheSuffix="ugp" TargetShaders="vs" Condition="!ps5"/>
+		<Define Name="USE_GATHER_POSITION" Value="1" CacheSuffix="ugp" TargetShaders="gs" Condition="ps5"/>
+		<VertexShader Filename="PostProcessLensFlare.hlsl" EntryPoint="GlareBladesVS" />
+		<GeometryShader Filename="PostProcessLensFlare.hlsl" EntryPoint="GlareBladesGS" />
+		<PixelShader Filename="PostProcessLensFlare.hlsl" EntryPoint="GlareBladesPS" />
+		<InputElement Topology="PointList"/>
+		<BlendState AlphaBlend="Additive"/>
+	</Pipeline>
+
+	<Pipeline Pass="GlareMix" InputLayout="FullScreenVertex" FrameBufferBindingName="LensFlare">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcessLensFlare.hlsl" EntryPoint="GlareMixPS" />
+		<BlendState AlphaBlend="Additive"/>
+	</Pipeline>
+
+	<Pipeline Pass="GenerateCommandGlareBlade">
+		<ComputeShader Filename="PostProcessLensFlare.hlsl" EntryPoint="GenerateCommandGlareBladeCS" />
+	</Pipeline>
+
+	<Pipeline Pass="GatherBladePosition">
+		<ComputeShader Filename="PostProcessLensFlare.hlsl" EntryPoint="GatherBladePositionCS" />
+	</Pipeline>
+
+</RenderPass>
+
+<RenderPass Name="SkyMaterial" FrameBuffer="SceneColorWithDepth">
+	<Pipeline Pass="SkyMaterial" BuildTriggerType="Required">
+		<Permutation>
+			<Element Name="IsEnvironmentRender" EnableMacroName="IS_ENVIRONMENT_RENDER" EnumType="Bool" Default="False" CacheSuffix="env" TargetShaders="cs" Material="False" />
+			<Element Name="RenderAtmosphericScatteringInline" EnableMacroName="RENDER_ATMOSPHERIC_SCATTERING_INLINE" EnumType="Bool" Default="False" CacheSuffix="ras" TargetShaders="cs" Material="False" />
+			<Element Name="IsTiledShader" EnableMacroName="IS_TILED" EnumType="Bool" Default="True" CacheSuffix="tile" TargetShaders="cs" Material="False" />
+		</Permutation>
+		<ComputeShader Filename="PostProcess.hlsl" EntryPoint="SkyMaterialCS" />
+	</Pipeline>
+	<!--
+	<Pipeline Pass="SkyMaterial" InputLayout="FullScreenVertex" BuildTriggerType="Required">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVSZFar"/>
+		<PixelShader Filename="PostProcess.hlsl" EntryPoint="SkyMaterialPS"/>
+		<DepthState DepthWrite="False" DepthEnable="True" DepthFunc="None"/>
+	</Pipeline>
+	-->
+</RenderPass>
+
+<RenderPass Name="SkyMaterialEnvironment" FrameBuffer="EnvironmentColor">
+	<Permutation>
+		<Element Name="IsEnvironmentRender" EnableMacroName="IS_ENVIRONMENT_RENDER" EnumType="Bool" Default="False" CacheSuffix="env" TargetShaders="ps" Material="False" />
+	</Permutation>
+	<Pipeline Pass="SkyMaterial" InputLayout="FullScreenVertex" BuildTriggerType="Required">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVSZFar"/>
+		<PixelShader Filename="PostProcess.hlsl" EntryPoint="SkyMaterialPS"/>
+		<DepthState DepthWrite="False" DepthEnable="True" DepthFunc="Equal"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="VisualizeToneMappingGraph" FrameBuffer="VisualizeToneMappingGraph" ClearTarget="RenderTargets">
+	<Pipeline Pass="VisualizeToneMappingGraph" InputLayout="FullScreenVertex">
+		<Permutation>
+			<Element Name="ToneMapMode" EnableMacroName="TONE_MAP_MODE" EnumType="Integer" Count="7" Default="False" Material="False" CacheSuffix="tm" TargetShaders="ps" />
+		</Permutation>
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="PostProcess.hlsl" EntryPoint="VisualizeToneMappingGraphPS" />
+	</Pipeline>
+</RenderPass>

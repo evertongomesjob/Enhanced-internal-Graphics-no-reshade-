@@ -1,0 +1,636 @@
+﻿<FrameBuffer Name="DynamicShadowBindless0" ForStaticMesh="True">
+	<DynamicShadowDepth ViewIndex="1" />
+</FrameBuffer>
+
+<FrameBuffer Name="DynamicShadowBindless1" ForStaticMesh="True">
+	<DynamicShadowDepth ViewIndex="2" />
+</FrameBuffer>
+
+<FrameBuffer Name="DynamicShadowTranslucentBindless0" ForStaticMesh="True">
+	<DynamicShadowColor ViewIndex="1" />
+	<DynamicShadowDepth ViewIndex="1" />
+</FrameBuffer>
+
+<FrameBuffer Name="DynamicShadowTranslucentBindless1" ForStaticMesh="True">
+	<DynamicShadowColor ViewIndex="2" />
+	<DynamicShadowDepth ViewIndex="2" />
+</FrameBuffer>
+
+<RenderPass Name="SceneDynamicShadowBindless" FrameBuffer="DynamicShadowBindless" ClearTarget="All" ClearDepth="1.0" AutoUpdateMaterialConfigs="False">
+	<Define Name="__XBOX_XIC_ENABLE" Value="1" CacheSuffix="xic" TargetShaders="all" Condition="Xbox"/>
+	<FrameBufferBinding Name="DynamicShadowBindless0" FrameBuffer="DynamicShadowBindless0"/>
+	<FrameBufferBinding Name="DynamicShadowBindless1" FrameBuffer="DynamicShadowBindless1"/>
+
+	<Permutation>
+		<Element Name="ViewInstancing" EnableMacroName="VIEW_INSTANCING" EnumType="Bool" Default="False" CacheSuffix="vi" TargetShaders="all" Material="False" Condition="SupportViewInstancing">
+			<Overriding StateOverrideMethod="Blank">
+			</Overriding>
+			<Overriding StateOverrideMethod="Overwrite">
+				<GeometryShader />
+				<ViewInstancing Count="2" Type="SequentialRenderTarget"/>
+			</Overriding>
+		</Element>
+		<Element Name="MassPlacement" EnableMacroName="MASS_PLACEMENT" EnumType="Bool" Default="False" CacheSuffix="mp" TargetShaders="vs" />
+	</Permutation>
+
+	<!-- RenderPass ?대쫫?? 湲곕낯 FrameBuffer?? ??묓븯?? FrameBufferBindingName?쇰줈 ?곗씪 ?? ?덉쓬 -->
+	<Pipeline Pass="ObjectShadow" InputLayout="ObjectVertex" Condition="MultiDraw" FrameBufferBindingName="SceneDynamicShadowBindless, DynamicShadowBindless0, DynamicShadowBindless1">
+		<Define Name="USE_DRAW_INDEX_AS_MATERIAL_PARAMTERS_VIEW_INDEX" Value="1" CacheSuffix="diamp" TargetShaders="vs|ps" />
+		<Permutation>
+			<Element Name="ClipSkyHoles" EnableMacroName="CLIP_SKY_HOLES" EnumType="Bool" Default="False" CacheSuffix="csh" TargetShaders="vs|ps" Material="False">
+				<Overriding Value="True" StateOverrideMethod="Overwrite">
+					<PixelShader Filename="ObjectShadow.hlsl" EntryPoint="DynamicShadowMainPS" />
+				</Overriding>
+			</Element>
+			<Element Name="VertexVelocity" EnableMacroName="VERTEX_VELOCITY" EnumType="Bool" Default="False" CacheSuffix="vv" TargetShaders="vs" />
+			<Element Name="AlphaTest" EnableMacroName="ALPHA_TEST" EnumType="Bool" Default="False" CacheSuffix="at" TargetShaders="vs|gs|ps">
+				<Overriding Value="True" StateOverrideMethod="Overwrite">
+					<PixelShader Filename="ObjectShadow.hlsl" EntryPoint="DynamicShadowMainPS" />
+				</Overriding>
+			</Element>
+			<Element Name="ShadowMaterial" EnableMacroName="SHADOW_MATERIAL" EnumType="Bool" Default="False" Mutable="False" CacheSuffix="sm" TargetShaders="all">
+				<Overriding Value="False" DivergentLevel="AsDefined" StateOverrideMethod="Blank"/>
+				<Overriding Value="True" DivergentLevel="Material" StateOverrideMethod="Blank"/>
+			</Element>
+			<Element Name="Dynamic" EnableMacroName="IS_DYNAMIC" EnumType="Bool" Default="False" CacheSuffix="dyn" TargetShaders="vs|ps">
+				<PipelineState Type="Blank"></PipelineState>
+				<PipelineState Type="OverwriteDefault" >
+					<StencilRefValueOp OpName="OR" StencilRefName="SHADOW_MATERIAL_IGNORED_BY_RAYTRACING"/>
+				</PipelineState>
+			</Element>
+			<Element Name="TwoSided" EnableMacroName="TWO_SIDED" EnumType="Bool" Default="False" CacheSuffix="ts" TargetShaders="all" Mutable="false">
+				<PipelineState Type="Blank"></PipelineState>
+				<PipelineState Type="Overwrite">
+					<CullMode Mode="None" />
+				</PipelineState>
+			</Element>
+		</Permutation>
+		<VertexShader Filename="ObjectShadow.hlsl" EntryPoint="DynamicShadowMainVS" />
+		<!--<GeometryShader Filename="ObjectShadow.hlsl" EntryPoint="ObjectSceneDynamicShadowGS" />-->
+		<DepthState DepthFunc="LessEqual" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="SHADOW_MATERIAL_DEFAULT" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+	
+	<Pipeline Pass="TreeShadow8" InputLayout="TreeVertex" IndirectCommandLayout="ObjectIndirectCommand" Condition="MultiDraw" FrameBufferBindingName="SceneDynamicShadowBindless, DynamicShadowBindless0, DynamicShadowBindless1">
+		<Permutation>
+			<Element Name="TreeQualityLevel" EnableMacroName="TREE_QUALITY_LEVEL" EnumType="Integer" Count="2" CacheSuffix="tql" TargetShaders="vs" Material="false" />
+		</Permutation>
+		<VertexShader Filename="TreeShadow.hlsl" EntryPoint="TreeSceneShadowWindVS8" />
+		<!--<GeometryShader Filename="TreeShadow.hlsl" EntryPoint="TreeSceneDynamicShadowGS" />-->
+		<PixelShader Filename="TreeShadow.hlsl" EntryPoint="TreeSceneDynamicShadowPS" />
+		<DepthState DepthFunc="LessEqual"/>
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+
+	<Pipeline Pass="TreeBranchShadow8" InputLayout="TreeVertex" IndirectCommandLayout="ObjectIndirectCommand" Condition="MultiDraw" FrameBufferBindingName="SceneDynamicShadowBindless, DynamicShadowBindless0, DynamicShadowBindless1">
+		<Permutation>
+			<Element Name="TreeQualityLevel" EnableMacroName="TREE_QUALITY_LEVEL" EnumType="Integer" Count="2" CacheSuffix="tql" TargetShaders="vs" Material="false" />
+		</Permutation>
+		<VertexShader Filename="TreeShadow.hlsl" EntryPoint="TreeBranchShadowWindVS8" />
+		<!--<GeometryShader Filename="TreeShadow.hlsl" EntryPoint="TreeSceneDynamicShadowGS" />-->
+		<DepthState DepthFunc="LessEqual"/>
+		<CullMode Mode="Front" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+
+	<Pipeline Pass="TreeFrondShadow8" InputLayout="TreeVertex" IndirectCommandLayout="ObjectIndirectCommand" Condition="MultiDraw" FrameBufferBindingName="SceneDynamicShadowBindless, DynamicShadowBindless0, DynamicShadowBindless1">
+		<Permutation>
+			<Element Name="TreeQualityLevel" EnableMacroName="TREE_QUALITY_LEVEL" EnumType="Integer" Count="2" CacheSuffix="tql" TargetShaders="vs" Material="false" />
+		</Permutation>
+		<VertexShader Filename="TreeShadow.hlsl" EntryPoint="TreeFrondShadowWindVS8" />
+		<!--<GeometryShader Filename="TreeShadow.hlsl" EntryPoint="TreeSceneDynamicShadowGS" />-->
+		<PixelShader Filename="TreeShadow.hlsl" EntryPoint="TreeSceneDynamicShadowPS" />
+		<DepthState DepthFunc="LessEqual"/>
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+
+	<Pipeline Pass="TreeLeafShadow8" InputLayout="TreeVertex" IndirectCommandLayout="ObjectIndirectCommand" Condition="MultiDraw|ConditionalTextureMSArray" FrameBufferBindingName="SceneDynamicShadowBindless, DynamicShadowBindless0, DynamicShadowBindless1">
+		<Permutation>
+			<Element Name="TreeQualityLevel" EnableMacroName="TREE_QUALITY_LEVEL" EnumType="Integer" Count="2" CacheSuffix="tql" TargetShaders="vs" Material="false" />
+		</Permutation>
+		<Define Name="LEAF_WIND_ANIMATION" Value="1" CacheSuffix="lwa" TargetShaders="vs"/>
+		<VertexShader Filename="TreeShadow.hlsl" EntryPoint="TreeLeafShadowWindVS8" />
+		<!--<GeometryShader Filename="TreeShadow.hlsl" EntryPoint="TreeSceneDynamicShadowGS" />-->
+		<PixelShader Filename="TreeShadow.hlsl" EntryPoint="TreeSceneDynamicShadowPS" />
+		<DepthState DepthFunc="LessEqual"/>
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+
+	<Pipeline Pass="TreeImpostorShadow8" InputLayout="ImpostorVertex" Condition="MultiDraw|ConditionalRTIndexInVertexOrTessellationShader" FrameBufferBindingName="SceneDynamicShadowBindless, DynamicShadowBindless0, DynamicShadowBindless1">
+		<Define Name="RT_INDEX_IN_VS" Value="1" CacheSuffix="ri" TargetShaders="all"/>
+		<VertexShader Filename="TreeShadow.hlsl" EntryPoint="vsImpostorDynamicCascadedShadow" />
+		<PixelShader Filename="TreeShadow.hlsl" EntryPoint="psImpostorDynamicCascadedShadow" />
+		<DepthState DepthFunc="LessEqual"/>
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+
+	<Pipeline Pass="TerrainTile" InputLayout="TerrainTileIndexedVertex" FrameBufferBindingName="SceneDynamicShadowBindless, DynamicShadowBindless0, DynamicShadowBindless1" BuildTriggerType="Required">
+		<Define Name="USE_DISPLACEMENT" Value="1" CacheSuffix="disp" TargetShaders="all"/>
+		<Define Name="DISTANCE_TILE_SCALE_TYPE" Value="0" CacheSuffix="udts" TargetShaders="all"/>
+		<Permutation>
+			<Element Name="TerrainDebugMode" EnableMacroName="TERRAIN_DEBUG_MODE" EnumType="Bool" Default="False" CacheSuffix="tdm" TargetShaders="vs|ps" Material="False" />
+			<Element Name="ClipSkyHoles" EnableMacroName="CLIP_SKY_HOLES" EnumType="Bool" Default="False" CacheSuffix="csh" TargetShaders="vs|ps" Material="False">
+				<Overriding Value="True" StateOverrideMethod="Overwrite">
+					<PixelShader Filename="TerrainHeight.hlsl" EntryPoint="TerrainTileShadowPSBindlessMain" />
+				</Overriding>
+			</Element>
+		</Permutation>
+		<VertexShader Filename="TerrainHeight.hlsl" EntryPoint="TerrainHeightTileDynamicShadowVS" />
+		<!--<GeometryShader Filename="TerrainHeight.hlsl" EntryPoint="TerrainTileDynamicShadowGS" />-->
+		<!--<PixelShader Filename="TerrainHeight.hlsl" EntryPoint="TerrainTileShadowPSBindlessMain" />-->
+		<DepthState DepthFunc="LessEqual"/>
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+
+	<Pipeline Pass="TerrainMesh" InputLayout="ObjectVertex" Condition="MultiDraw" FrameBufferBindingName="SceneDynamicShadowBindless, DynamicShadowBindless0, DynamicShadowBindless1">
+		<Define Name="USE_DRAW_INDEX_AS_MATERIAL_PARAMTERS_VIEW_INDEX" Value="1" CacheSuffix="diamp" TargetShaders="vs|ps" />
+		<Permutation>
+			<Element Name="ClipSkyHoles" EnableMacroName="CLIP_SKY_HOLES" EnumType="Bool" Default="False" CacheSuffix="csh" TargetShaders="vs|ps" Material="False">
+				<Overriding Value="True" StateOverrideMethod="Overwrite">
+					<PixelShader Filename="ObjectShadow.hlsl" EntryPoint="DynamicShadowMainPS" />
+				</Overriding>
+			</Element>
+			<!--
+			<Element Name="UseTessellation" EnableMacroName="USE_TESSELLATION" EnumType="Bool" Default="False" CacheSuffix="utes" Material="True" TargetShaders="all">
+				<Overriding StateOverrideMethod="Blank">
+				</Overriding>
+				<Overriding StateOverrideMethod="Overwrite">
+					<InputElement Topology="ControlPoint_3">
+						<VertexElement Element="Position" Format="R32G32B32_FLOAT" InputClass="Vertex" />
+						<VertexElement Element="TexCoord" Format="R16G16_FLOAT" InputClass="Vertex" />
+						<VertexElement Element="Normal" Format="R16G16B16A16_FLOAT" InputClass="Vertex" />
+						<VertexElement Element="Tangent" Format="R16G16B16A16_FLOAT" InputClass="Vertex" />
+						<VertexElement Element="Color" Format="R8G8B8A8" InputClass="Vertex" />
+						<VertexElement Element="BlendIndices0" Format="R32_UINT" InputClass="Instance" />
+					</InputElement>
+					<VertexShader Filename="TerrainMesh.hlsl" EntryPoint="vsTerrainMeshTessellateShadow"/>
+					<HullShader Filename="TerrainMesh.hlsl" EntryPoint="hsTerrainMeshTessellate"/>
+					<DomainShader Filename="TerrainMesh.hlsl" EntryPoint="dsTerrainMeshTessellateShadow"/>
+					<GeometryShader Filename="TerrainMesh.hlsl" EntryPoint="gsTerrainMeshTessellateDynamicShadow" />
+					<PixelShader Filename="TerrainMesh.hlsl" EntryPoint="psTerrainMeshTessellateDynamicShadow"/>
+				</Overriding>
+			</Element>
+			-->
+		</Permutation>
+		<Define Name="USE_TESSELLATE_HS_TYPE" Value="2" CacheSuffix="utht" TargetShaders="all"/>
+		<VertexShader Filename="ObjectShadow.hlsl" EntryPoint="DynamicShadowMainVS" />
+		<HullShader />
+		<DomainShader />
+		<!--<GeometryShader Filename="ObjectShadow.hlsl" EntryPoint="ObjectSceneDynamicShadowGS" />-->
+		<!--<PixelShader Filename="ObjectShadow.hlsl" EntryPoint="DynamicShadowMainPS" />-->
+		<DepthState DepthFunc="LessEqual"/>
+		<CullMode Mode="Front" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+
+  <!--<Pipeline Pass="ObjectTessellateShadow" InputLayout="ObjectTessellateVertex">
+    <VertexShader Filename="ObjectShadow.hlsl" EntryPoint="DynamicShadowMainVS" />
+    <GeometryShader Filename="ObjectShadow.hlsl" EntryPoint="ObjectSceneDynamicShadowGS" />
+    <PixelShader Filename="ObjectShadow.hlsl" EntryPoint="DynamicShadowMainPS" />
+    <DepthState DepthFunc="LessEqual"/>
+    <Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+  </Pipeline>-->
+
+</RenderPass>
+
+<RenderPass Name="SceneDynamicShadowMiscBindless" FrameBuffer="DynamicShadowBindless">
+	<Define Name="__XBOX_XIC_ENABLE" Value="1" CacheSuffix="xic" TargetShaders="all" Condition="Xbox"/>
+
+	<Pipeline Pass="DeformableSurfaceTerrainShadow" Condition="!Android" BuildTriggerType="Required">
+		<Define Name="SHADOW_PASS" Value="1" CacheSuffix="sp" TargetShaders="hs"/>
+		<VertexShader Filename="DeformableSurface.hlsl" EntryPoint="DeformableSurfaceTerrainVS" />
+		<HullShader Filename="DeformableSurface.hlsl" EntryPoint="DeformableSurfaceTerrainHS" /> 
+		<DomainShader Filename="DeformableSurface.hlsl" EntryPoint="DeformableSurfaceTerrainShadowDS" />
+		<GeometryShader Filename="DeformableSurface.hlsl" EntryPoint="DeformableSurfaceDynamicShadowGS" />
+		<PixelShader Filename="DeformableSurface.hlsl" EntryPoint="DeformableSurfaceShadowPS" />
+		<InputElement Topology="ControlPoint_4">
+			<VertexElement Element="Position" Format="R32G32B32_FLOAT" InputClass="Vertex" />
+			<VertexElement Element="TexCoord0" Format="R32G32_FLOAT" InputClass="Vertex" />
+		</InputElement>
+		<DepthState DepthFunc="LessEqual"/>
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+	
+	<Pipeline Pass="SubdivisionSurfaceTerrainShadow" InputLayout="Empty">
+		<VertexShader Filename="DeformableSurface.hlsl" EntryPoint="SubdivisionSurfaceVS" />
+		<PixelShader Filename="DeformableSurface.hlsl" EntryPoint="SubDivisionSurfaceShadowPS" />
+		<DepthState DepthFunc="LessEqual"/>
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>	
+
+	<Pipeline Pass="DynamicShadowRayMarchingSDFs" InputLayout="FullScreenVertex">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="RayMarchingSDFs.hlsl" EntryPoint="RayMarchingSDFsForDynamicShadowPS" />
+		<DepthState DepthFunc="LessEqual"/>
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="SceneDynamicShadowTranslucentBindless" FrameBuffer="DynamicShadowTranslucentBindless" ClearTarget="RenderTargets" ClearColor="1,1,1,1">
+	<Define Name="__XBOX_XIC_ENABLE" Value="1" CacheSuffix="xic" TargetShaders="all" Condition="Xbox"/>
+
+	<FrameBufferBinding Name="DynamicShadowTranslucentBindless0" FrameBuffer="DynamicShadowTranslucentBindless0"/>	
+	<FrameBufferBinding Name="DynamicShadowTranslucentBindless1" FrameBuffer="DynamicShadowTranslucentBindless1"/>
+
+	<Permutation>
+		<Element Name="ViewInstancing" EnableMacroName="VIEW_INSTANCING" EnumType="Bool" Default="False" CacheSuffix="vi" TargetShaders="all" Material="False" Condition="SupportViewInstancing">
+			<Overriding StateOverrideMethod="Blank">
+			</Overriding>
+			<Overriding StateOverrideMethod="Overwrite">
+				<GeometryShader />
+				<ViewInstancing Count="2" Type="SequentialRenderTarget"/>
+			</Overriding>
+		</Element>
+	</Permutation>
+	
+	<Pipeline Pass="ObjectShadow" InputLayout="ObjectVertex" Condition="MultiDraw" FrameBufferBindingName="SceneDynamicShadowTranslucentBindless, DynamicShadowTranslucentBindless0, DynamicShadowTranslucentBindless1">
+		<Define Name="USE_DRAW_INDEX_AS_MATERIAL_PARAMTERS_VIEW_INDEX" Value="1" CacheSuffix="diamp" TargetShaders="vs|ps" />
+		<Permutation>
+			<Element Name="ShadowMaterial" EnableMacroName="SHADOW_MATERIAL" EnumType="Bool" Default="False" Mutable="False" CacheSuffix="sm" TargetShaders="all">
+				<Overriding Value="False" DivergentLevel="AsDefined" StateOverrideMethod="Blank"/>
+				<Overriding Value="True" DivergentLevel="Material" StateOverrideMethod="Blank"/>
+			</Element>
+		</Permutation>
+		<Define Name="NEED_TEXTURE" Value="1" CacheSuffix="nt" TargetShaders="all"/>
+		<VertexShader Filename="ObjectShadow.hlsl" EntryPoint="DynamicShadowMainVS" />
+		<!--<GeometryShader Filename="ObjectShadow.hlsl" EntryPoint="ObjectSceneDynamicShadowGS" />-->
+		<PixelShader Filename="ObjectShadow.hlsl" EntryPoint="DynamicTranslucentShadowMainPS" />
+		<DepthState DepthFunc="LessEqual" DepthWrite="False" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="SHADOW_MATERIAL_IGNORED_BY_RAYTRACING" />
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+		<BlendState AlphaBlend="Multiply"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="SceneShadowBindless" FrameBuffer="StaticShadowBindless" ClearTarget="All" ClearDepth="1.0">
+	<Define Name="__XBOX_XIC_ENABLE" Value="1" CacheSuffix="xic" TargetShaders="all" Condition="Xbox"/>
+
+	<Permutation>
+		<Element Name="MassPlacement" EnableMacroName="MASS_PLACEMENT" EnumType="Bool" Default="False" CacheSuffix="mp" TargetShaders="vs|ps">
+			<PipelineState Type="Blank"></PipelineState>
+			<PipelineState Type="Overwrite" >
+				<InputLayout From="ObjectVertex" To="ObjectVertexMass"/>
+				<InputLayout From="TreeVertex" To="TreeVertexMass"/>
+				<InputLayout From="ImpostorVertex" To="ImpostorVertexMass"/>
+			</PipelineState>
+		</Element>
+	</Permutation>
+
+	<Pipeline Pass="ObjectShadow" InputLayout="ObjectVertex" Condition="MultiDraw|ConditionalRTIndexInVertexOrTessellationShader">
+		<Define Name="USE_DRAW_INDEX_AS_MATERIAL_PARAMTERS_VIEW_INDEX" Value="1" CacheSuffix="diamp" TargetShaders="vs|ps" />
+		<Permutation>
+			<Element Name="VertexVelocity" EnableMacroName="VERTEX_VELOCITY" EnumType="Bool" Default="False" CacheSuffix="vv" TargetShaders="vs" />
+			<Element Name="AlphaTest" EnableMacroName="ALPHA_TEST" EnumType="Bool" Default="False" CacheSuffix="at" TargetShaders="vs|gs|ps" />
+			<Element Name="ShadowMaterial" EnableMacroName="SHADOW_MATERIAL" EnumType="Bool" Default="False" Mutable="False" CacheSuffix="sm" TargetShaders="all">
+				<Overriding Value="False" DivergentLevel="AsDefined" StateOverrideMethod="Blank"/>
+				<Overriding Value="True" DivergentLevel="Material" StateOverrideMethod="Blank"/>
+			</Element>
+			<Element Name="TwoSided" EnableMacroName="TWO_SIDED" EnumType="Bool" Default="False" CacheSuffix="ts" TargetShaders="all" Mutable="false">
+				<PipelineState Type="Blank"></PipelineState>
+				<PipelineState Type="Overwrite">
+					<CullMode Mode="None" />
+				</PipelineState>
+			</Element>
+		</Permutation>
+		<Define Name="NEED_TEXTURE" Value="1" CacheSuffix="nt" TargetShaders="all"/>
+		<VertexShader Filename="ObjectShadow.hlsl" EntryPoint="StaticShadowMainVS" CompatibilityFlag="BoundsCheck" />
+		<PixelShader Filename="ObjectShadow.hlsl" EntryPoint="StaticShadowMainPS" />
+		<DepthState DepthFunc="LessEqual"/>
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+
+	<Pipeline Pass="TreeShadow8" InputLayout="TreeVertex" IndirectCommandLayout="ObjectIndirectCommand" Condition="MultiDraw|ConditionalRTIndexInVertexOrTessellationShader|ConditionalTextureMSArray">
+		<Permutation>
+			<Element Name="TreeQualityLevel" EnableMacroName="TREE_QUALITY_LEVEL" EnumType="Integer" Count="2" CacheSuffix="tql" TargetShaders="vs" Material="false" />
+		</Permutation>
+		<Define Name="RT_INDEX_IN_VS" Value="1" CacheSuffix="ri" TargetShaders="all"/>
+		<VertexShader Filename="TreeShadow.hlsl" EntryPoint="TreeSceneShadowVS8_FarShadow_NoGS_Cascaded" />
+		<PixelShader Filename="TreeShadow.hlsl" EntryPoint="TreeSceneStaticShadowColorPS" />
+		<DepthState DepthFunc="LessEqual"/>
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+
+	<Pipeline Pass="TreeImpostorShadow8" InputLayout="ImpostorVertex" Condition="MultiDraw|ConditionalRTIndexInVertexOrTessellationShader">
+		<Define Name="RT_INDEX_IN_VS" Value="1" CacheSuffix="ri" TargetShaders="all"/>
+		<VertexShader Filename="TreeShadow.hlsl" EntryPoint="vsImpostorStaticCascadedShadow" />
+		<PixelShader Filename="TreeShadow.hlsl" EntryPoint="psImpostorStaticCascadedShadow" />
+		<DepthState DepthFunc="LessEqual"/>
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+
+	<Pipeline Pass="TerrainMesh" InputLayout="ObjectVertex" Condition="MultiDraw|ConditionalRTIndexInVertexOrTessellationShader">
+		<Define Name="USE_DRAW_INDEX_AS_MATERIAL_PARAMTERS_VIEW_INDEX" Value="1" CacheSuffix="diamp" TargetShaders="vs|ps" />
+		<!--<Permutation>
+			<Element Name="UseTessellation" EnableMacroName="USE_TESSELLATION" EnumType="Bool" Default="False" CacheSuffix="utes" Material="True" TargetShaders="all">
+				<Overriding StateOverrideMethod="Blank">
+				</Overriding>
+				<Overriding StateOverrideMethod="Overwrite">
+					<InputElement Topology="ControlPoint_3">
+						<VertexElement Element="Position" Format="R32G32B32_FLOAT" InputClass="Vertex" />
+						<VertexElement Element="TexCoord" Format="R16G16_FLOAT" InputClass="Vertex" />
+						<VertexElement Element="Normal" Format="R16G16B16A16_FLOAT" InputClass="Vertex" />
+						<VertexElement Element="Tangent" Format="R16G16B16A16_FLOAT" InputClass="Vertex" />
+						<VertexElement Element="Color" Format="R8G8B8A8" InputClass="Vertex" />
+						<VertexElement Element="BlendIndices0" Format="R32_UINT" InputClass="Instance" />
+					</InputElement>
+					<VertexShader Filename="TerrainMesh.hlsl" EntryPoint="vsTerrainMeshTessellateShadow"/>
+					<HullShader Filename="TerrainMesh.hlsl" EntryPoint="hsTerrainMeshTessellate"/>
+					<DomainShader Filename="TerrainMesh.hlsl" EntryPoint="dsTerrainMeshTessellateShadow"/>
+					<PixelShader Filename="TerrainMesh.hlsl" EntryPoint="psTerrainMeshTessellateShadow"/>
+				</Overriding>
+			</Element>
+		</Permutation>-->
+		<Permutation>
+			<Element Name="ShadowMaterial" EnableMacroName="SHADOW_MATERIAL" EnumType="Bool" Default="False" Mutable="False" CacheSuffix="sm" TargetShaders="all">
+				<Overriding Value="False" DivergentLevel="AsDefined" StateOverrideMethod="Blank"/>
+				<Overriding Value="True" DivergentLevel="Material" StateOverrideMethod="Blank"/>
+			</Element>
+		</Permutation>
+		<!-- <Define Name="USE_TESSELLATE_HS_TYPE" Value="1" CacheSuffix="utht" TargetShaders="all"/> -->
+		<Define Name="NEED_TEXTURE" Value="1" CacheSuffix="nt" TargetShaders="all"/>
+		<Define Name="Pipeline_TerrainMesh" Value="1" CacheSuffix="ptm" TargetShaders="all"/>
+		<Define Name="RenderPassFilename_RenderPassShadow" Value="1" CacheSuffix="rps" TargetShaders="all"/>
+		<VertexShader Filename="TerrainMesh.hlsl" EntryPoint="vsTerrainMeshShadow" />
+		<HullShader />
+		<DomainShader />
+		<PixelShader Filename="ObjectShadow.hlsl" EntryPoint="StaticShadowMainPS" />
+		<DepthState DepthFunc="LessEqual"/>
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="15.0" MultisampleShadow="True"/>
+	</Pipeline>
+
+	<Pipeline Pass="TerrainMeshImpostorShadow" InputLayout="ImpostorVertex" Condition="MultiDraw|ConditionalRTIndexInVertexOrTessellationShader">
+		<Define Name="RT_INDEX_IN_VS" Value="1" CacheSuffix="ri" TargetShaders="all"/>
+		<VertexShader Filename="TerrainMeshImpostorShadow.hlsl" EntryPoint="vsImpostorStaticCascadedShadow" />
+		<PixelShader Filename="TerrainMeshImpostorShadow.hlsl" EntryPoint="psImpostorStaticCascadedShadow" />
+		<DepthState DepthFunc="LessEqual"/>
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+
+	<Pipeline Pass="TerrainTile" InputLayout="TerrainTileIndexedVertex" Condition="ConditionalRTIndexInVertexOrTessellationShader">
+		<!--<Define Name="USE_DISPLACEMENT" Value="3" CacheSuffix="disp" TargetShaders="all"/>-->
+		<Define Name="DONT_USE_SSDM" Value="1" CacheSuffix="ssdm" TargetShaders="all"/>
+		<Define Name="DISTANCE_TILE_SCALE_TYPE" Value="1" CacheSuffix="udts" TargetShaders="all"/>
+		<Define Name="NEED_TEXTURE" Value="1" CacheSuffix="nt" TargetShaders="all"/>
+		<Define Name="RT_INDEX_IN_VS" Value="1" CacheSuffix="ri" TargetShaders="all"/>
+		<Permutation>
+			<Element Name="TerrainDebugMode" EnableMacroName="TERRAIN_DEBUG_MODE" EnumType="Bool" Default="False" CacheSuffix="tdm" TargetShaders="vs|ps" Material="False" />
+		</Permutation>
+		<VertexShader Filename="TerrainHeight.hlsl" EntryPoint="TerrainHeightTileStaticShadowVS" />
+		<PixelShader Filename="TerrainHeight.hlsl" EntryPoint="TerrainTileShadowPSBindlessColorMain" />
+		<DepthState DepthFunc="LessEqual"/>
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="StaticShadowImpostorGroup" FrameBuffer="StaticShadowBindless" Condition="MeshShader">
+	<Define Name="__XBOX_XIC_ENABLE" Value="1" CacheSuffix="xic" TargetShaders="all" Condition="Xbox"/>
+
+	<Pipeline Pass="ObjectImpostor" Condition="MeshShader">
+		<Define Name="IMPOSTOR_VIEW_TYPE" Value="1" CacheSuffix="ivt" TargetShaders="ms|ps"/>
+		<MeshShader Filename="Impostor.hlsl" EntryPoint="ImpostorGroupMS" />
+		<PixelShader Filename="Impostor.hlsl" EntryPoint="ImpostorGroupPS" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_IMPOSTOR" />
+		<DepthState DepthFunc="LessEqual"/>
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+
+	<Pipeline Pass="TerrainMeshImpostor" Condition="MeshShader">
+		<Define Name="IMPOSTOR_TYPE" Value="2" CacheSuffix="it" TargetShaders="ps"/>
+		<Define Name="IMPOSTOR_VIEW_TYPE" Value="1" CacheSuffix="ivt" TargetShaders="ms|ps"/>
+		<MeshShader Filename="Impostor.hlsl" EntryPoint="ImpostorGroupMS" />
+		<PixelShader Filename="Impostor.hlsl" EntryPoint="ImpostorGroupPS" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_TERRAIN_MESH_IMPOSTOR" />
+		<DepthState DepthFunc="LessEqual"/>
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+
+	<Pipeline Pass="TreeImpostor" Condition="MeshShader">
+		<Define Name="IMPOSTOR_TYPE" Value="1" CacheSuffix="it" TargetShaders="ps"/>
+		<Define Name="IMPOSTOR_VIEW_TYPE" Value="1" CacheSuffix="ivt" TargetShaders="ms|ps"/>
+		<MeshShader Filename="Impostor.hlsl" EntryPoint="ImpostorGroupMS" />
+		<PixelShader Filename="Impostor.hlsl" EntryPoint="ImpostorGroupPS" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_TREE_IMPOSTOR" />
+		<DepthState DepthFunc="LessEqual"/>
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="SceneShadowTranslucentBindless" FrameBuffer="StaticShadowTranslucentBindless">
+	<Define Name="__XBOX_XIC_ENABLE" Value="1" CacheSuffix="xic" TargetShaders="all" Condition="Xbox"/>
+
+	<Pipeline Pass="ObjectShadow" InputLayout="ObjectVertex" Condition="MultiDraw|ConditionalRTIndexInVertexOrTessellationShader">
+		<Define Name="USE_DRAW_INDEX_AS_MATERIAL_PARAMTERS_VIEW_INDEX" Value="1" CacheSuffix="diamp" TargetShaders="vs|ps" />
+		<Define Name="NEED_TEXTURE" Value="1" CacheSuffix="nt" TargetShaders="all"/>
+		<Define Name="RT_INDEX_IN_VS" Value="1" CacheSuffix="ri" TargetShaders="all"/>
+		<VertexShader Filename="ObjectShadow.hlsl" EntryPoint="StaticShadowMainVS" CompatibilityFlag="BoundsCheck" />
+		<PixelShader Filename="ObjectShadow.hlsl" EntryPoint="StaticTranslucentShadowMainPS" />
+		<DepthState DepthFunc="LessEqual" DepthWrite="False" />
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="SceneTetrahedronMassiveShadowBindless" FrameBuffer="TetrahedronMassiveShadowBindless" ClearTarget="All" ClearDepth="1.0">
+	<Define Name="__XBOX_XIC_ENABLE" Value="1" CacheSuffix="xic" TargetShaders="all" Condition="Xbox"/>
+
+	<Permutation>		
+		<Element Name="MassPlacement" EnableMacroName="MASS_PLACEMENT" EnumType="Bool" Default="False" CacheSuffix="mp" TargetShaders="vs" />
+	</Permutation>
+	
+	<Pipeline Pass="ObjectShadow" InputLayout="ObjectVertex" IndirectCommandLayout="ObjectIndirectCommand" Condition="MultiDraw">
+		<Permutation>
+			<Element Name="AlphaTest" EnableMacroName="ALPHA_TEST" EnumType="Bool" Default="False" CacheSuffix="at" TargetShaders="vs|gs|ps" />
+			<Element Name="ShadowMaterial" EnableMacroName="SHADOW_MATERIAL" EnumType="Bool" Default="False" Mutable="False" CacheSuffix="sm" TargetShaders="all">
+				<Overriding Value="False" DivergentLevel="AsDefined" StateOverrideMethod="Blank"/>
+				<Overriding Value="True" DivergentLevel="Material" StateOverrideMethod="Blank"/>
+			</Element>
+		</Permutation>
+		<VertexShader Filename="ObjectShadow.hlsl" EntryPoint="TetrahedronVSBindlessMain" />
+		<!--<GeometryShader Filename="ObjectShadow.hlsl" EntryPoint="ObjectSceneTetrahedronShadowGS" />-->
+		<PixelShader Filename="ObjectShadow.hlsl" EntryPoint="TetrahedronPSBindlessMain" />
+		<DepthState DepthFunc="LessEqual"/>
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+
+	<Pipeline Pass="TreeShadow8" InputLayout="TreeVertex" IndirectCommandLayout="ObjectIndirectCommand" Condition="MultiDraw">
+		<VertexShader Filename="TreeShadow.hlsl" EntryPoint="TreeSceneShadowWindVS8" />
+		<!--<GeometryShader Filename="TreeShadow.hlsl" EntryPoint="TreeSceneTetrahedronShadowGS" />-->
+		<PixelShader Filename="TreeShadow.hlsl" EntryPoint="TetrahedronPSBindlessMain" />
+		<DepthState DepthFunc="LessEqual"/>
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="SceneQuadMassiveShadowBindless" FrameBuffer="QuadMassiveShadowBindless" ClearTarget="All" ClearDepth="1.0">
+	<Define Name="__XBOX_XIC_ENABLE" Value="1" CacheSuffix="xic" TargetShaders="all" Condition="Xbox"/>
+
+	<Permutation>
+		<Element Name="MassPlacement" EnableMacroName="MASS_PLACEMENT" EnumType="Bool" Default="False" CacheSuffix="mp" TargetShaders="vs" />
+	</Permutation>
+
+	<Pipeline Pass="ObjectShadow" InputLayout="ObjectVertex" IndirectCommandLayout="ObjectIndirectCommand" Condition="MultiDraw|ConditionalRTIndexInVertexOrTessellationShader">
+		<Permutation>
+			<Element Name="AlphaTest" EnableMacroName="ALPHA_TEST" EnumType="Bool" Default="False" CacheSuffix="at" TargetShaders="vs|gs|ps" />
+			<Element Name="ShadowMaterial" EnableMacroName="SHADOW_MATERIAL" EnumType="Bool" Default="False" Mutable="False" CacheSuffix="sm" TargetShaders="all">
+				<Overriding Value="False" DivergentLevel="AsDefined" StateOverrideMethod="Blank"/>
+				<Overriding Value="True" DivergentLevel="Material" StateOverrideMethod="Blank"/>
+			</Element>
+		</Permutation>
+		<Define Name="RT_INDEX_IN_VS" Value="1" CacheSuffix="ri" TargetShaders="all"/>
+		<VertexShader Filename="ObjectShadow.hlsl" EntryPoint="ObjectSceneQuadShadowVS" />
+		<PixelShader Filename="ObjectShadow.hlsl" EntryPoint="PointLightPSBindlessMain" />
+		<DepthState DepthFunc="LessEqual"/>
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+
+	<Pipeline Pass="TreeShadow8" InputLayout="TreeVertex" IndirectCommandLayout="ObjectIndirectCommand" Condition="MultiDraw|ConditionalRTIndexInVertexOrTessellationShader">
+		<Define Name="RT_INDEX_IN_VS" Value="1" CacheSuffix="ri" TargetShaders="all"/>
+		<VertexShader Filename="TreeShadow.hlsl" EntryPoint="TreeSceneQuadShadowWindVS8" />
+		<PixelShader Filename="TreeShadow.hlsl" EntryPoint="PointLightPSBindlessMain" />
+		<DepthState DepthFunc="LessEqual"/>
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="SceneTerrainShadowBindless" FrameBuffer="TerrainShadowBindless" ClearTarget="Depth" ClearDepth="1.0">
+	<Define Name="__XBOX_XIC_ENABLE" Value="1" CacheSuffix="xic" TargetShaders="all" Condition="Xbox"/>
+
+	<Pipeline Pass="TerrainMesh" InputLayout="ObjectVertex" Condition="MultiDraw">
+		<VertexShader Filename="ObjectShadow.hlsl" EntryPoint="ObjectSceneShadowVS_TerrainShadow" />
+		<DepthState DepthFunc="LessEqual"/>
+	</Pipeline>
+
+	<Pipeline Pass="TerrainTile" InputLayout="TerrainTileIndexedVertex">
+		<Define Name="DONT_USE_SSDM" Value="1" CacheSuffix="ssdm" TargetShaders="all"/>
+		<!--<Define Name="USE_DISPLACEMENT" Value="3" CacheSuffix="disp" TargetShaders="all"/>-->
+		<Define Name="DISTANCE_TILE_SCALE_TYPE" Value="2" CacheSuffix="udts" TargetShaders="all"/>
+		<Define Name="RT_INDEX_IN_VS" Value="1" CacheSuffix="ri" TargetShaders="all"/>
+		<Permutation>
+			<Element Name="TerrainDebugMode" EnableMacroName="TERRAIN_DEBUG_MODE" EnumType="Bool" Default="False" CacheSuffix="tdm" TargetShaders="vs|ps" Material="False" />
+			<Element Name="TerrainShadowPrePass" EnableMacroName="TERRAIN_SHADOW_PRE_PASS" EnumType="Bool" Default="False" CacheSuffix="tsp" TargetShaders="ps" />
+		</Permutation>
+		<VertexShader Filename="TerrainHeight.hlsl" EntryPoint="TerrainHeightTileTerrainShadowVS" />
+		<PixelShader Filename="TerrainHeight.hlsl" EntryPoint="TerrainTileForTerrainShadowPSMain" />
+		<DepthState DepthFunc="LessEqual"/>
+		<CullMode Mode="None" />
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="SceneCharacterShadowBindless" FrameBuffer="DynamicShadowBindless" Condition="MultiDraw&((Windows&!Intel)&!Low)">
+	<Define Name="__XBOX_XIC_ENABLE" Value="1" CacheSuffix="xic" TargetShaders="all" Condition="Xbox"/>
+
+	<Permutation>
+		<Element Name="AlphaTest" EnableMacroName="ALPHA_TEST" EnumType="Bool" Default="False" CacheSuffix="at" TargetShaders="ps" />
+		<Element Name="UseShadowDynamicAlphaTest" EnableMacroName="USE_DYNAMIC_ALPHA_TEST" EnumType="Bool" Default="False" CacheSuffix="dsa" TargetShaders="all" />
+		<Element Name="HighQualityHairDynamicShadow" EnableMacroName="HIGH_QUALITY_HAIR_DYNAMIC_SHADOW" EnumType="Bool" Default="False" Mutable="False" CacheSuffix="hqds" TargetShaders="all" />
+		<Element Name="ViewInstancing" EnableMacroName="VIEW_INSTANCING" EnumType="Bool" Default="False" CacheSuffix="vi" TargetShaders="all" Material="False" Condition="SupportViewInstancing">
+			<Overriding StateOverrideMethod="Blank">
+			</Overriding>
+			<Overriding StateOverrideMethod="Overwrite">
+				<GeometryShader />
+				<ViewInstancing Count="2" Type="SequentialRenderTarget"/>
+			</Overriding>
+		</Element>
+		<Element Name="ShadowMaterial" EnableMacroName="SHADOW_MATERIAL" EnumType="Bool" Default="False" CacheSuffix="sm" TargetShaders="all" Mutable="false">
+			<Overriding Value="False" DivergentLevel="AsDefined" StateOverrideMethod="Blank"/>
+			<Overriding Value="True" DivergentLevel="Material" StateOverrideMethod="Blank"/>
+		</Element>
+		<Element Name="ShadowCoverage" EnableMacroName="USE_COVERAGE" EnumType="Bool" Default="False" Mutable="False" CacheSuffix="c" TargetShaders="all" />
+	</Permutation>
+
+	<Pipeline Pass="CharacterShadow" InputLayout="CharacterVertex" Condition="ConditionalRTIndexInVertexOrTessellationShader">
+		<Define Name="SKINNED_MESH_TECHNIQUE" Value="1" CacheSuffix="smtf" TargetShaders="all"/>
+		<Define Name="SHADOW_PIPELINE" Value="1" CacheSuffix="sp" TargetShaders="all"/>
+		<VertexShader Filename="Character.hlsl" EntryPoint="VSMainShadow_SceneShadow" />
+		<PixelShader Filename="Character.hlsl" EntryPoint="PSMainShadow" />
+		<DepthState DepthFunc="LessEqual"/>
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="SceneCharacterShadowBindless0" FrameBuffer="DynamicShadowBindless0" Condition="MultiDraw&(PS5|Xbox|Intel|Apple|(Windows&Low))">
+	<Define Name="__XBOX_XIC_ENABLE" Value="1" CacheSuffix="xic" TargetShaders="all" Condition="Xbox"/>
+
+	<Permutation>
+		<Element Name="AlphaTest" EnableMacroName="ALPHA_TEST" EnumType="Bool" Default="False" CacheSuffix="at" TargetShaders="ps" />
+		<Element Name="UseShadowDynamicAlphaTest" EnableMacroName="USE_DYNAMIC_ALPHA_TEST" EnumType="Bool" Default="False" CacheSuffix="dsa" TargetShaders="all" />
+		<Element Name="HighQualityHairDynamicShadow" EnableMacroName="HIGH_QUALITY_HAIR_DYNAMIC_SHADOW" EnumType="Bool" Default="False" Mutable="False" CacheSuffix="hqds" TargetShaders="all" />
+		<Element Name="ShadowMaterial" EnableMacroName="SHADOW_MATERIAL" EnumType="Bool" Default="False" CacheSuffix="sm" TargetShaders="all" Mutable="false">
+			<Overriding Value="False" DivergentLevel="AsDefined" StateOverrideMethod="Blank"/>
+			<Overriding Value="True" DivergentLevel="Material" StateOverrideMethod="Blank"/>
+		</Element>
+		<Element Name="ShadowCoverage" EnableMacroName="USE_COVERAGE" EnumType="Bool" Default="False" Mutable="False" CacheSuffix="c" TargetShaders="all" />
+	</Permutation>
+
+	<Pipeline Pass="CharacterShadow" InputLayout="CharacterVertex" Condition="ConditionalRTIndexInVertexOrTessellationShader" BuildTriggerType="Required">
+		<Define Name="SKINNED_MESH_TECHNIQUE" Value="1" CacheSuffix="smtf" TargetShaders="all"/>
+		<Define Name="SHADOW_PIPELINE" Value="1" CacheSuffix="sp" TargetShaders="all"/>
+		<VertexShader Filename="Character.hlsl" EntryPoint="VSMainShadow_SceneShadow" />
+		<PixelShader Filename="Character.hlsl" EntryPoint="PSMainShadow" />
+		<DepthState DepthFunc="LessEqual"/>
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="SceneCharacterShadowBindless1" FrameBuffer="DynamicShadowBindless1" Condition="MultiDraw&(PS5|Xbox|Intel|Apple|(Windows&Low))">
+	<Define Name="__XBOX_XIC_ENABLE" Value="1" CacheSuffix="xic" TargetShaders="all" Condition="Xbox"/>
+
+	<Permutation>
+		<Element Name="AlphaTest" EnableMacroName="ALPHA_TEST" EnumType="Bool" Default="False" CacheSuffix="at" TargetShaders="ps" />
+		<Element Name="UseShadowDynamicAlphaTest" EnableMacroName="USE_DYNAMIC_ALPHA_TEST" EnumType="Bool" Default="False" CacheSuffix="dsa" TargetShaders="all" />
+		<Element Name="HighQualityHairDynamicShadow" EnableMacroName="HIGH_QUALITY_HAIR_DYNAMIC_SHADOW" EnumType="Bool" Default="False" Mutable="False" CacheSuffix="hqds" TargetShaders="all" />
+		<Element Name="ShadowMaterial" EnableMacroName="SHADOW_MATERIAL" EnumType="Bool" Default="False" CacheSuffix="sm" TargetShaders="all" Mutable="false">
+			<Overriding Value="False" DivergentLevel="AsDefined" StateOverrideMethod="Blank"/>
+			<Overriding Value="True" DivergentLevel="Material" StateOverrideMethod="Blank"/>
+		</Element>
+		<Element Name="ShadowCoverage" EnableMacroName="USE_COVERAGE" EnumType="Bool" Default="False" Mutable="False" CacheSuffix="c" TargetShaders="all" />
+	</Permutation>
+
+	<Pipeline Pass="CharacterShadow" InputLayout="CharacterVertex" Condition="ConditionalRTIndexInVertexOrTessellationShader" BuildTriggerType="Required">
+		<Define Name="SKINNED_MESH_TECHNIQUE" Value="1" CacheSuffix="smtf" TargetShaders="all"/>
+		<Define Name="SHADOW_PIPELINE" Value="1" CacheSuffix="sp" TargetShaders="all"/>
+		<VertexShader Filename="Character.hlsl" EntryPoint="VSMainShadow_SceneShadow" />
+		<PixelShader Filename="Character.hlsl" EntryPoint="PSMainShadow" />
+		<DepthState DepthFunc="LessEqual"/>
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="32" SlopeScaledDepthBias="4.0" MultisampleShadow="True"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="SceneCharacterNearFieldShadowBindless" FrameBuffer="NearFieldShadow" ClearTarget="DepthStencil" ClearDepth="1.0" Condition="MultiDraw">
+	<Define Name="__XBOX_XIC_ENABLE" Value="1" CacheSuffix="xic" TargetShaders="all" Condition="Xbox"/>
+
+	<Permutation>
+		<Element Name="AlphaTest" EnableMacroName="ALPHA_TEST" EnumType="Bool" Default="False" CacheSuffix="at" TargetShaders="ps" />
+		<Element Name="UseShadowDynamicAlphaTest" EnableMacroName="USE_DYNAMIC_ALPHA_TEST" EnumType="Bool" Default="False" CacheSuffix="dsa" TargetShaders="all" />
+		<Element Name="ShadowMaterial" EnableMacroName="SHADOW_MATERIAL" EnumType="Bool" Default="False" CacheSuffix="sm" TargetShaders="all" Mutable="false">
+			<Overriding Value="False" DivergentLevel="AsDefined" StateOverrideMethod="Blank"/>
+			<Overriding Value="True" DivergentLevel="Material" StateOverrideMethod="Blank"/>
+		</Element>
+	</Permutation>
+
+	<Pipeline Pass="CharacterShadow" InputLayout="CharacterVertex" Condition="ConditionalRTIndexInVertexOrTessellationShader" BuildTriggerType="Required">
+		<Define Name="SHADOW_PIPELINE" Value="1" CacheSuffix="sp" TargetShaders="all"/>
+		<Define Name="RT_INDEX_IN_VS" Value="1" CacheSuffix="ri" TargetShaders="all"/>
+		<Define Name="SKINNED_MESH_TECHNIQUE" Value="1" CacheSuffix="smtf" TargetShaders="all"/>
+		<Define Name="IS_NEAR_FIELD_SHADOW" Value="1" CacheSuffix="nfs" TargetShaders="all"/>
+		<VertexShader Filename="Character.hlsl" EntryPoint="VSMainShadow_NearFieldShadow" />
+		<PixelShader Filename="Character.hlsl" EntryPoint="PSMainShadow" />
+		<DepthState DepthFunc="LessEqual"/>
+		<CullMode Mode="None" />
+		<Rasterizer SlopeScaledDepthBias="4.0"/>
+	</Pipeline>
+</RenderPass>

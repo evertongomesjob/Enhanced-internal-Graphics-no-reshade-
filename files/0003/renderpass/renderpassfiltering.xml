@@ -1,0 +1,62 @@
+﻿<FrameBuffer Name="SceneDiffuseHalfPrev">
+	<SceneDiffuseHalfPrev/>
+</FrameBuffer>
+
+<RenderPass Name="SvgFiltering">
+	<Permutation>
+		<Element Name="NormalDepthMerged" EnableMacroName="NORMAL_DEPTH_MERGED" EnumType="Bool" Default="False" CacheSuffix="ndm" TargetShaders="cs" />
+		<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="False" CacheSuffix="dws" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+		<Element Name="SmoothVariance" EnableMacroName="SMOOTH_VARIANCE" EnumType="Bool" Default="False" CacheSuffix="smv" TargetShaders="cs" />
+		<Element Name="SkipTemporalFilter" EnableMacroName="SKIP_TEMPORAL_FILTER" EnumType="Bool" Default="False" CacheSuffix="stf" TargetShaders="cs" />
+		<Element Name="SkipSpatialFilter" EnableMacroName="SKIP_SPATIAL_FILTER" EnumType="Bool" Default="False" CacheSuffix="ssf" TargetShaders="cs" />
+		<Element Name="SkipWaveletFilter" EnableMacroName="SKIP_WAVELET_FILTER" EnumType="Bool" Default="False" CacheSuffix="swf" TargetShaders="cs" />
+	</Permutation>
+	<Define Name="IS_DOWNSAMPLED" Value="1" CacheSuffix="dws" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+
+	<Pipeline Pass="TemporalReprojectionDiffuse">
+		<Define Name="USE_PRE_EXPOSURE" Value="0" CacheSuffix="prexp" TargetShaders="cs" />
+		<ComputeShader Filename="FilteringSvg.hlsl" EntryPoint="TemporalReprojectionDiffuse_CS" />
+	</Pipeline>
+
+	<Pipeline Pass="SVGF_EstimateVariance">
+		<ComputeShader Filename="FilteringSvg.hlsl" EntryPoint="SVGFilteringEstimateVariance_CS" />
+	</Pipeline>
+
+	<Pipeline Pass="SVGF_WaveletFiltering">
+		<!--<define Name="SMOOTH_VARIANCE" Value="0" CacheSuffix="smv" TargetShaders="cs" />-->
+		<ComputeShader Filename="FilteringSvg.hlsl" EntryPoint="SVGFiltering_CS" />
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="RecurrentBlur">
+	<Pipeline Pass="TemporalAccumulation">
+		<Permutation>
+			<Element Name="IsDownsampled" EnableMacroName="IS_DOWNSAMPLED" EnumType="Bool" Default="False" CacheSuffix="ds" TargetShaders="cs" Condition="(Windows|Metal) & Native16bitShaderOps" />
+			<Element Name="UpsampleSpecularIndirectLighting" EnableMacroName="UPSAMPLE_SPECULAR_INDIRECT_LIGHTING" EnumType="Bool" Default="True" CacheSuffix="us" TargetShaders="cs" />
+		</Permutation>
+		<Define Name="IS_DOWNSAMPLED" Value="0" CacheSuffix="dws" TargetShaders="cs" Condition="!Native16bitShaderOps"/>
+		<ComputeShader Filename="RecurrentBlur.hlsl" EntryPoint="TemporalAccumulationCS" />
+	</Pipeline>
+	
+	<Pipeline Pass="HistoryReconstruction">
+		<Permutation>
+			<Element Name="UseSeparateOutputTarget" EnableMacroName="USE_SEPARATE_OUTPUT_TARGET" EnumType="Bool" Default="True" CacheSuffix="usot" TargetShaders="cs"/>
+		</Permutation>
+		<ComputeShader Filename="RecurrentBlur.hlsl" EntryPoint="HistoryReconstructionCS" />
+	</Pipeline>
+	
+	<Pipeline Pass="Blur">
+		<Permutation>
+			<Element Name="AdaptiveRadius" EnableMacroName="USE_ADAPTVE_RADIUS" EnumType="Bool" Default="True" CacheSuffix="adrd" TargetShaders="cs"/>
+		</Permutation>
+		<ComputeShader Filename="RecurrentBlur.hlsl" EntryPoint="BlurCS" />
+	</Pipeline>
+
+	<Pipeline Pass="BuildColorMips" >
+		<Permutation>
+			<Element Name="CopyMipZero" EnableMacroName="COPY_MIP_0" EnumType="bool" Default="false" CacheSuffix="cmz" TargetShaders="cs" />
+			<Element Name="MipOperator" EnableMacroName="MIP_OPERATOR" EnumType="Integer" Default="2" Count="4" CacheSuffix="mop" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="MipGeneration.hlsl" EntryPoint="BuildColorMipsCS" />
+	</Pipeline>
+</RenderPass>

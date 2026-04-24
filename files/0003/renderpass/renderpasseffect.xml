@@ -1,0 +1,575 @@
+﻿<RenderPass Name="RenderParticlesAlphaBlend" FrameBuffer="EffectAlphaBlendFrameBuffer" Condition="MultiDraw">
+	<Pipeline Pass="EffectMaterial" InputLayout="EffectVertex" Condition="ConditionalVRS">
+		<Permutation>			
+			<!-- NOTE: enum class EFfectDepthStencilOptions과 동일하게 유지할것!! -->
+			<!-- NOTE: EffectConstant.hlsl과 동일하게 유지할것!! -->
+			<Element Name="AMPLIFIED_GLARE_MODE" Default="0" EnableMacroName="AMPLIFIED_GLARE_MODE" EnumType="Integer" Count="2" CacheSuffix="ag" TargetShaders="vs|ps" Material="true"  Mutable="False">
+				<PipelineState Type="Blank"/>
+				<PipelineState Type="Overwrite">
+					<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" WriteMaskName="MATERIAL_ID_MASK" StencilRefName="MATERIAL_ID_AMPLIFIED_GLARE_PARTICLE" />
+				</PipelineState>
+			</Element>
+			<Element Name="EFFECT_DEPTH_STENCIL_OPTIONS" EnableMacroName="EFFECT_DEPTH_STENCIL_OPTIONS" EnumType="Integer" Default="0" Count="3" Mutable="False" CacheSuffix="dsop" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Blank" />
+				<PipelineState Type="Overwrite">
+					<DepthState DepthEnable="True" DepthWrite="True" />
+				</PipelineState>
+				<PipelineState Type="Overwrite">
+					<DepthState DepthEnable="False" DepthWrite="False" />
+				</PipelineState>
+			</Element>
+			<Element Name="IS_COMMON_EFFECT" EnableMacroName="IS_COMMON_EFFECT" EnumType="Bool" Default="True" CacheSuffix="ce" TargetShaders="vs|ps" Material="true">
+				<Overriding Value="False" BuildTriggerType="Deferred">
+					<StencilState StencilEnable="False" />
+				</Overriding>
+				<Overriding Value="True" BuildTriggerType="Preloading"/>
+			</Element>
+			<Element Name="PARTICLE_RENDER_SHAPE" EnableMacroName="PARTICLE_RENDER_SHAPE" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="rs" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Blank"></PipelineState>
+				<PipelineState Type="Overwrite">
+					<DepthState DepthWrite="False" DepthFunc="LessEqual" />
+					<StencilState StencilEnable="False"/>
+					<!--<CullMode Mode="Front" /> 데칼을 음수 스케일로 좌우 반전시 컬링되는 문제가 있어 주석처리-->
+				</PipelineState>
+			</Element>
+			<Element Name="BLEND_MODE" Default="0" EnableMacroName="BLEND_MODE" EnumType="Integer" Count="2" Mutable="False" CacheSuffix="bm" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Overwrite">
+					<BlendState AlphaBlend="PremultipliedAlphaAccumulateInvSrc1Alpha"/>
+				</PipelineState>
+				<PipelineState Type="Overwrite">
+					<BlendState AlphaBlend="AdditiveAccumulateInvAlpha"/>
+				</PipelineState>
+			</Element>
+			<Element Name="UNFILTERED_MODE" Default="0" EnableMacroName="UNFILTERED_MODE" EnumType="Integer" Count="2" CacheSuffix="uf" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Blank"/>
+				<PipelineState Type="Overwrite">
+					<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" WriteMaskName="MATERIAL_ID_MASK" StencilRefName="MATERIAL_ID_UNFILTERED_TRANSLUCENT_PARTICLE" />
+				</PipelineState>
+			</Element>
+		</Permutation>
+		<BlendState  ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<Define Name="EFFECT_RENDER_MODE" Value="0" CacheSuffix="rm" TargetShaders="vs|ps" />
+		<VertexShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_VS" />
+		<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_PS" />
+		<DepthState DepthEnable="True" DepthWrite="False" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" WriteMaskName="MATERIAL_ID_MASK" StencilRefName="MATERIAL_ID_TRANSLUCENT_PARTICLE" />
+		<CullMode Mode="None" />
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="RenderParticlesAlphaBlendAfterTAA" FrameBuffer="EffectAlphaBlendAfterTAAFrameBuffer" Condition="MultiDraw">
+	<Pipeline Pass="EffectMaterial" InputLayout="EffectVertex" Condition="ConditionalVRS">
+		<Permutation>
+			<Element Name="IS_COMMON_EFFECT" EnableMacroName="IS_COMMON_EFFECT" EnumType="Bool" Default="True" CacheSuffix="ce" TargetShaders="vs|ps" Material="true">
+				<Overriding Value="False" BuildTriggerType="Deferred">
+					<StencilState StencilEnable="False" />
+				</Overriding>
+				<Overriding Value="True" BuildTriggerType="Preloading"/>
+			</Element>
+			<Element Name="PARTICLE_RENDER_SHAPE" EnableMacroName="PARTICLE_RENDER_SHAPE" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="rs" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Blank"></PipelineState>
+				<PipelineState Type="Overwrite">
+					<DepthState DepthWrite="False" DepthFunc="LessEqual" />
+					<StencilState StencilEnable="False"/>
+					<!--<CullMode Mode="Front" /> 데칼을 음수 스케일로 좌우 반전시 컬링되는 문제가 있어 주석처리-->
+				</PipelineState>
+			</Element>
+			<Element Name="BLEND_MODE" Default="0" EnableMacroName="BLEND_MODE" EnumType="Integer" Count="2" Mutable="False" CacheSuffix="bm" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Overwrite">
+					<BlendState AlphaBlend="PremultipliedAlphaAccumulateInvSrc1Alpha"/>
+				</PipelineState>
+				<PipelineState Type="Overwrite">
+					<BlendState AlphaBlend="AdditiveAccumulateInvAlpha"/>
+				</PipelineState>
+			</Element>
+			<Element Name="AMPLIFIED_GLARE_MODE" Default="0" EnableMacroName="AMPLIFIED_GLARE_MODE" EnumType="Integer" Count="2" CacheSuffix="ag" TargetShaders="vs|ps" Material="true" Mutable="False">
+				<PipelineState Type="Blank"/>
+				<PipelineState Type="Overwrite">
+					<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" WriteMaskName="MATERIAL_ID_MASK" StencilRefName="MATERIAL_ID_AMPLIFIED_GLARE_PARTICLE" />
+				</PipelineState>
+			</Element>
+		</Permutation>
+		<BlendState  ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<Define Name="UNFILTERED_MODE" Value="0" CacheSuffix="uf" TargetShaders="vs|ps" />
+		<Define Name="EFFECT_RENDER_MODE" Value="0" CacheSuffix="rm" TargetShaders="vs|ps" />
+		<Define Name="PARTICLE_RENDER_GROUP" Value="1" CacheSuffix="prg" TargetShaders="vs|ps" />
+		<VertexShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_VS" />
+		<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_PS" />
+		<DepthState DepthEnable="False" DepthWrite="False" />
+		<StencilState StencilEnable="False" />
+		<CullMode Mode="None" />
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="RenderParticlesAlphaBlendAfterPostProcess" FrameBuffer="EffectAlphaBlendAfterPostProcessFrameBuffer" Condition="MultiDraw">
+	<Pipeline Pass="EffectMaterial" InputLayout="EffectVertex" Condition="ConditionalVRS">
+		<Permutation>
+			<Element Name="IS_COMMON_EFFECT" EnableMacroName="IS_COMMON_EFFECT" EnumType="Bool" Default="True" CacheSuffix="ce" TargetShaders="vs|ps" Material="true">
+				<Overriding Value="False" BuildTriggerType="Deferred"/>
+				<Overriding Value="True" BuildTriggerType="Preloading"/>
+			</Element>
+			<Element Name="PARTICLE_RENDER_SHAPE" EnableMacroName="PARTICLE_RENDER_SHAPE" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="rs" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Blank"></PipelineState>
+				<PipelineState Type="Overwrite">
+					<DepthState DepthWrite="False" DepthFunc="LessEqual" />
+				</PipelineState>
+			</Element>
+			<Element Name="BLEND_MODE" Default="0" EnableMacroName="BLEND_MODE" EnumType="Integer" Count="2" Mutable="False" CacheSuffix="bm" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Overwrite">
+					<BlendState AlphaBlend="PremultipliedAlphaAccumulateInvSrc1Alpha"/>
+				</PipelineState>
+				<PipelineState Type="Overwrite">
+					<BlendState AlphaBlend="AdditiveAccumulateInvAlpha"/>
+				</PipelineState>
+			</Element>
+		</Permutation>
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<Define Name="EFFECT_RENDER_MODE" Value="0" CacheSuffix="rm" TargetShaders="vs|ps" />
+		<Define Name="UNFILTERED_MODE" Value="0" CacheSuffix="uf" TargetShaders="vs|ps" />
+		<Define Name="AMPLIFIED_GLARE_MODE" Value="0" CacheSuffix="ag" TargetShaders="vs|ps" />
+		<Define Name="PARTICLE_RENDER_GROUP" Value="2" CacheSuffix="prg" TargetShaders="vs|ps" />
+		<VertexShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_VS" />
+		<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_PS" />
+		<DepthState DepthEnable="False" DepthWrite="False" />
+		<StencilState StencilEnable="False" />
+		<CullMode Mode="None" />
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="RenderOffScreenParticlesAlphaBlend" FrameBuffer="EffectOffScreenParticleFrameBuffer" ClearTarget="RenderTargets" ClearColor="0.0f 0.0f 0.0f 1.0f" Condition="MultiDraw">
+	<Pipeline Pass="EffectMaterial" InputLayout="EffectVertex" Condition="ConditionalVRS">
+		<Permutation>
+			<Element Name="PARTICLE_RENDER_SHAPE" EnableMacroName="PARTICLE_RENDER_SHAPE" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="rs" TargetShaders="vs|ps" Material="true"/>
+			<Element Name="BLEND_MODE" Default="0" EnableMacroName="BLEND_MODE" EnumType="Integer" Count="2" Mutable="False" CacheSuffix="bm" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Overwrite">
+					<BlendState ColorWrite="RGBA" AlphaBlend="PremultipliedAlphaAccumulateInvAlpha"/>
+				</PipelineState>
+				<PipelineState Type="Overwrite">
+					<BlendState ColorWrite="RGB" AlphaBlend="Additive"/>
+				</PipelineState>
+			</Element>
+			<Element Name="USE_DEPTH_WRITE" EnableMacroName="USE_DEPTH_WRITE" EnumType="Bool" Default="False" Mutable="False" CacheSuffix="dw" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Blank"></PipelineState>
+				<PipelineState Type="Overwrite">
+					<DepthState DepthWrite="True" />
+				</PipelineState>
+			</Element>
+			<Element Name="AMPLIFIED_GLARE_MODE" Default="0" EnableMacroName="AMPLIFIED_GLARE_MODE" EnumType="Integer" Count="2" CacheSuffix="ag" TargetShaders="vs|ps" Material="true"  Mutable="False">
+				<PipelineState Type="Blank"/>
+				<PipelineState Type="Overwrite">
+					<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" WriteMaskName="MATERIAL_ID_MASK" StencilRefName="MATERIAL_ID_AMPLIFIED_GLARE_PARTICLE" />
+				</PipelineState>
+			</Element>
+			<Element Name="UNFILTERED_MODE" Default="0" EnableMacroName="UNFILTERED_MODE" EnumType="Integer" Count="2" CacheSuffix="uf" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Blank"/>
+				<PipelineState Type="Overwrite">
+					<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" WriteMaskName="MATERIAL_ID_MASK" StencilRefName="MATERIAL_ID_UNFILTERED_TRANSLUCENT_PARTICLE" />
+				</PipelineState>
+			</Element>
+		</Permutation>
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RG" AlphaBlend="Max"/>
+		<Define Name="IS_COMMON_EFFECT" Value="true" CacheSuffix="ce" TargetShaders="vs|ps" />
+		<Define Name="EFFECT_RENDER_MODE" Value="0" CacheSuffix="rm" TargetShaders="vs|ps" />
+		<Define Name="IS_OFFSCREEN_PARTICLE" Value="true" CacheSuffix="oscr" TargetShaders="vs|ps" />
+		<VertexShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_VS" />
+		<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_PS" />
+		<DepthState DepthEnable="False"/>
+		<CullMode Mode="None" />
+	</Pipeline>
+</RenderPass>
+
+<!-- RenderOffScreenParticlesAlphaBlendAfterTAA는 FrameBuffer와 ClearValue가 맞지 않아 Shader로 직접 Clear -->
+<RenderPass Name="RenderOffScreenParticlesAlphaBlendAfterTAA" FrameBuffer="EffectOffScreenParticleAfterTAAFrameBuffer" Condition="MultiDraw">
+	<Pipeline Pass="EffectMaterial" InputLayout="EffectVertex" Condition="ConditionalVRS">
+		<Permutation>
+			<Element Name="PARTICLE_RENDER_SHAPE" EnableMacroName="PARTICLE_RENDER_SHAPE" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="rs" TargetShaders="vs|ps" Material="true"/>
+			<Element Name="BLEND_MODE" Default="0" EnableMacroName="BLEND_MODE" EnumType="Integer" Count="2" Mutable="False" CacheSuffix="bm" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Overwrite">
+					<BlendState ColorWrite="RGBA" AlphaBlend="PremultipliedAlphaAccumulateInvAlpha"/>
+				</PipelineState>
+				<PipelineState Type="Overwrite">
+					<BlendState ColorWrite="RGB" AlphaBlend="Additive"/>
+				</PipelineState>
+			</Element>
+		</Permutation>
+		<Define Name="IS_COMMON_EFFECT" Value="true" CacheSuffix="ce" TargetShaders="vs|ps" />
+		<Define Name="EFFECT_RENDER_MODE" Value="0" CacheSuffix="rm" TargetShaders="vs|ps" />
+		<Define Name="IS_OFFSCREEN_PARTICLE" Value="true" CacheSuffix="oscr" TargetShaders="vs|ps" />
+		<Define Name="PARTICLE_RENDER_GROUP" Value="1" CacheSuffix="prg" TargetShaders="vs|ps" />
+		<Define Name="UNFILTERED_MODE" Value="0" CacheSuffix="uf" TargetShaders="vs|ps" />
+		<VertexShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_VS" />
+		<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_PS" />
+		<DepthState DepthEnable="False" DepthWrite="False" />
+		<CullMode Mode="None" />
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="RenderParticlesOpaque" FrameBuffer="GBuffer" UseInputAttachment="True" Condition="MultiDraw">
+	<Pipeline Pass="EffectMaterial" InputLayout="EffectVertex" Condition="ConditionalVRS">
+		<Permutation>
+			<Element Name="IS_BLOOD" EnableMacroName="IS_BLOOD" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="bl" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Blank"></PipelineState>
+				<PipelineState Type="Overwrite">
+					<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_BLOOD" />
+				</PipelineState>
+			</Element>
+			<Element Name="PARTICLE_RENDER_SHAPE" EnableMacroName="PARTICLE_RENDER_SHAPE" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="rs" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Blank"></PipelineState>
+				<PipelineState Type="Overwrite">
+					<DepthState DepthWrite="False" DepthFunc="LessEqual" />
+					<BlendState ColorWrite="" /> <!-- 데칼은 UAV를 이용하여 Write하므로 렌더타겟 ColorWrite=""로 설정 -->
+					<BlendState1 ColorWrite="" />
+					<BlendState2 ColorWrite="" />
+					<BlendState3 ColorWrite="" />
+					<StencilState StencilEnable="False" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_PARTICLE_DECAL" />
+					<!--<CullMode Mode="Front" /> 데칼을 음수 스케일로 좌우 반전시 컬링되는 문제가 있어 주석처리-->
+					<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_OpaqueDecal_PS" />
+				</PipelineState>
+			</Element>
+		</Permutation>
+		<Define Name="IS_COMMON_EFFECT" Value="true" CacheSuffix="ce" TargetShaders="vs|ps" />
+		<Define Name="EFFECT_RENDER_MODE" Value="0" CacheSuffix="rm" TargetShaders="vs|ps" />
+		<Define Name="BLEND_MODE" Value="3" CacheSuffix="bm" TargetShaders="vs|ps" />
+		<VertexShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_VS" />
+		<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_PS" />
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="RG" />
+		<DepthState DepthEnable="True" DepthWrite="True" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_PARTICLE" />
+		<CullMode Mode="None" />
+	</Pipeline>
+	<Pipeline Pass="EffectMaterialGrass" InputLayout="EffectVertex" Condition="ConditionalVRS">
+		<Permutation>
+			<Element Name="PARTICLE_RENDER_SHAPE" EnableMacroName="PARTICLE_RENDER_SHAPE" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="rs" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Blank"></PipelineState>
+				<PipelineState Type="Overwrite">
+					<DepthState DepthWrite="False" DepthFunc="LessEqual" />
+					<StencilState StencilEnable="False"/>
+					<BlendState3 ColorWrite=""/>
+					<!-- 데칼은 velocity write 안함 -->
+					<!--<CullMode Mode="Front" /> 데칼을 음수 스케일로 좌우 반전시 컬링되는 문제가 있어 주석처리-->
+				</PipelineState>
+			</Element>
+		</Permutation>
+		<Define Name="IS_COMMON_EFFECT" Value="true" CacheSuffix="ce" TargetShaders="vs|ps" />
+		<Define Name="EFFECT_RENDER_MODE" Value="0" CacheSuffix="rm" TargetShaders="vs|ps" />
+		<Define Name="BLEND_MODE" Value="3" CacheSuffix="bm" TargetShaders="vs|ps" />
+		<VertexShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_VS" />
+		<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_PS" />
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="RG" />
+		<DepthState DepthEnable="True" DepthWrite="True" />
+		<!--MATERIAL_ID_VEGETABLE 변경시 ScreenSpaceTessllation에서 복사해줘야함.-->
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_PARTICLE_GRASS" />
+		<StencilRefValueOp OpName="OR" StencilRefName="MATERIAL_MASK_DYNAMIC"/>
+		<CullMode Mode="None" />
+	</Pipeline>
+	<Pipeline Pass="EffectMaterialThin" InputLayout="EffectVertex" Condition="ConditionalVRS">
+		<Permutation>
+			<Element Name="IS_BLOOD" EnableMacroName="IS_BLOOD" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="bl" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Blank"></PipelineState>
+				<PipelineState Type="Overwrite">
+					<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_BLOOD" />
+				</PipelineState>
+			</Element>
+			<Element Name="PARTICLE_RENDER_SHAPE" EnableMacroName="PARTICLE_RENDER_SHAPE" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="rs" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Blank"></PipelineState>
+				<PipelineState Type="Overwrite">
+					<DepthState DepthWrite="False" DepthFunc="LessEqual" />
+					<StencilState StencilEnable="False"/>
+					<BlendState3 ColorWrite=""/>
+					<!-- 데칼은 velocity write 안함 -->
+					<!--<CullMode Mode="Front" /> 데칼을 음수 스케일로 좌우 반전시 컬링되는 문제가 있어 주석처리-->
+				</PipelineState>
+			</Element>
+		</Permutation>
+		<Define Name="IS_COMMON_EFFECT" Value="true" CacheSuffix="ce" TargetShaders="vs|ps" />
+		<Define Name="EFFECT_RENDER_MODE" Value="0" CacheSuffix="rm" TargetShaders="vs|ps" />
+		<Define Name="BLEND_MODE" Value="3" CacheSuffix="bm" TargetShaders="vs|ps" />
+		<VertexShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_VS" />
+		<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_PS" />
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="RG" />
+		<DepthState DepthEnable="True" DepthWrite="True" />
+		<!--MATERIAL_ID_VEGETABLE 변경시 ScreenSpaceTessllation에서 복사해줘야함.-->
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_FIBER" />
+		<StencilRefValueOp OpName="OR" StencilRefName="MATERIAL_MASK_DYNAMIC"/>
+		<CullMode Mode="None" />
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="RenderOffscreenParticlesOpaque" FrameBuffer="EffectOffscreenParticleGBuffer" ClearTarget="RenderTargets" UseInputAttachment="True" Condition="MultiDraw">
+	<Pipeline Pass="EffectMaterial" InputLayout="EffectVertex" Condition="ConditionalVRS">
+		<Permutation>
+			<Element Name="IS_BLOOD" EnableMacroName="IS_BLOOD" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="bl" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Blank"></PipelineState>
+				<PipelineState Type="Overwrite">
+					<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_BLOOD" />
+				</PipelineState>
+			</Element>
+			<Element Name="PARTICLE_RENDER_SHAPE" EnableMacroName="PARTICLE_RENDER_SHAPE" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="rs" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Blank"></PipelineState>
+				<PipelineState Type="Overwrite">
+					<DepthState DepthEnable="False" />
+					<!--<CullMode Mode="Front" /> 데칼을 음수 스케일로 좌우 반전시 컬링되는 문제가 있어 주석처리-->
+				</PipelineState>
+			</Element>
+		</Permutation>
+		<BlendState ColorWrite="RGBA" AlphaBlend="AlphaAccumulateInvAlpha"/>
+		<BlendState1 ColorWrite="RGB" AlphaBlend="Alpha"/>
+		<BlendState2 ColorWrite="RGB" AlphaBlend="Alpha"/>
+		<BlendState3 ColorWrite="RGBA" AlphaBlend="PremultipliedAlphaAccumulateInvAlpha"/>
+		<BlendState4 ColorWrite="RG"/>
+		<Define Name="IS_COMMON_EFFECT" Value="true" CacheSuffix="ce" TargetShaders="vs|ps" />
+		<Define Name="EFFECT_RENDER_MODE" Value="0" CacheSuffix="rm" TargetShaders="vs|ps" />
+		<Define Name="IS_OFFSCREEN_PARTICLE" Value="true" CacheSuffix="oscr" TargetShaders="vs|ps" />
+		<Define Name="BLEND_MODE" Value="3" CacheSuffix="bm" TargetShaders="vs|ps" />
+		<Define Name="OFFSCREEN_PARTICLE_DEFERRED_RENDERING" Value="true" CacheSuffix="opdr" TargetShaders="vs|ps" />
+		<VertexShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_VS" />
+		<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_PS" />
+		<DepthState DepthEnable="False" />
+		<CullMode Mode="None" />
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="RenderParticlesGBufferTranslucency" FrameBuffer="GBufferTranslucency" UseInputAttachment="True" Condition="MultiDraw">
+	<Pipeline Pass="EffectMaterial" InputLayout="EffectVertex" Condition="ConditionalVRS">
+		<Permutation>
+			<Element Name="PARTICLE_RENDER_SHAPE" EnableMacroName="PARTICLE_RENDER_SHAPE" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="rs" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Blank">
+					<CullMode Mode="None"/>
+				</PipelineState>
+				<PipelineState Type="Overwrite">
+					<DepthState DepthWrite="False" DepthFunc="LessEqual" />
+					<BlendState ColorWrite="" /> <!-- 데칼은 UAV를 이용하여 Write하므로 렌더타겟 ColorWrite=""로 설정 -->
+					<BlendState1 ColorWrite="" />
+					<BlendState2 ColorWrite="" />
+					<BlendState3 ColorWrite="" />
+					<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_OpaqueDecal_PS" />
+					<CullMode Mode="None" />
+				</PipelineState>
+			</Element>
+			<Element Name="UNFILTERED_MODE" Default="0" EnableMacroName="UNFILTERED_MODE" EnumType="Integer" Count="2" CacheSuffix="uf" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Blank"/>
+				<PipelineState Type="Overwrite">
+					<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" WriteMaskName="MATERIAL_ID_MASK" StencilRefName="MATERIAL_ID_UNFILTERED_TRANSLUCENT_PARTICLE" />
+				</PipelineState>
+			</Element>
+		</Permutation>
+		<Define Name="IS_COMMON_EFFECT" Value="true" CacheSuffix="ce" TargetShaders="vs|ps" />
+		<Define Name="EFFECT_RENDER_MODE" Value="0" CacheSuffix="rm" TargetShaders="vs|ps" />
+		<Define Name="BLEND_MODE" Value="4" CacheSuffix="bm" TargetShaders="vs|ps" />		
+		<VertexShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_VS" />
+		<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_PS" />
+		<BlendState ColorWrite="BA" />
+		<DepthState DepthEnable="True" DepthWrite="True" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_TRANSLUCENT"/>
+		<CullMode Mode="Back"/>
+	</Pipeline>
+</RenderPass>
+
+
+<RenderPass Name="RenderParticlesGBufferTranslucencyBack" FrameBuffer="GBufferTranslucencyBack" UseInputAttachment="True" Condition="MultiDraw">
+	<Pipeline Pass="EffectMaterial" InputLayout="EffectVertex" Condition="ConditionalVRS">
+		<Permutation>
+			<Element Name="PARTICLE_RENDER_SHAPE" EnableMacroName="PARTICLE_RENDER_SHAPE" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="rs" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Blank"></PipelineState>
+				<PipelineState Type="Overwrite">
+					<DepthState DepthWrite="False" DepthFunc="LessEqual" />
+					<StencilState StencilEnable="False"/>
+					<!--<CullMode Mode="Front" /> 데칼을 음수 스케일로 좌우 반전시 컬링되는 문제가 있어 주석처리-->
+				</PipelineState>
+			</Element>
+			<Element Name="UNFILTERED_MODE" Default="0" EnableMacroName="UNFILTERED_MODE" EnumType="Integer" Count="2" CacheSuffix="uf" TargetShaders="vs|ps" Material="true">
+				<PipelineState Type="Blank"/>
+				<PipelineState Type="Overwrite">
+					<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" WriteMaskName="MATERIAL_ID_MASK" StencilRefName="MATERIAL_ID_UNFILTERED_TRANSLUCENT_PARTICLE" />
+				</PipelineState>
+			</Element>
+		</Permutation>
+		<Define Name="IS_COMMON_EFFECT" Value="true" CacheSuffix="ce" TargetShaders="vs|ps|gs" />
+		<Define Name="EFFECT_RENDER_MODE" Value="0" CacheSuffix="rm" TargetShaders="vs|ps" />
+		<Define Name="BLEND_MODE" Value="4" CacheSuffix="bm" TargetShaders="vs|ps" />
+		<VertexShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_VS" />
+		<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_PS" />
+		<BlendState ColorWrite="BA" />
+		<DepthState DepthEnable="True" DepthWrite="True" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_TRANSLUCENT"/>
+		<CullMode Mode="None" />
+	</Pipeline>
+</RenderPass>
+
+
+<RenderPass Name="RenderParticlesDistortionOffset" FrameBuffer="EffectDistortionOffsetFrameBuffer" ClearTarget="RenderTargets" Condition="MultiDraw">
+	<Pipeline Pass="EffectMaterial" InputLayout="EffectVertex" Condition="ConditionalVRS">
+		<Permutation>
+			<Element Name="IS_COMMON_EFFECT" EnableMacroName="IS_COMMON_EFFECT" EnumType="Bool" Default="True" CacheSuffix="ce" TargetShaders="vs|ps" Material="true">
+				<Overriding Value="False" BuildTriggerType="Deferred"/>
+				<Overriding Value="True" BuildTriggerType="Preloading"/>
+			</Element>
+			<Element Name="PARTICLE_RENDER_SHAPE" EnableMacroName="PARTICLE_RENDER_SHAPE" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="rs" TargetShaders="vs|ps" Material="true"/>
+		</Permutation>
+		<Define Name="EFFECT_RENDER_MODE" Value="1" CacheSuffix="rm" TargetShaders="vs|ps" />
+		<Define Name="IS_OFFSCREEN_PARTICLE" Value="true" CacheSuffix="oscr" TargetShaders="vs|ps" />
+		<VertexShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_VS" />
+		<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="RenderParticles_Distortion_PS" />
+		<CullMode Mode="None" />
+		<BlendState AlphaBlend="Additive_RG"/>
+		<DepthState DepthEnable="False" />
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="SceneEffectShadowBindless" FrameBuffer="DynamicShadowBindless" ClearTarget="All" ClearDepth="1.0" AutoUpdateMaterialConfigs="False">
+	<Pipeline Pass="EffectMaterial" InputLayout="EffectVertex" Condition="MultiDraw&ConditionalVRS">
+		<Permutation>
+			<Element Name="ViewInstancing" EnableMacroName="VIEW_INSTANCING" EnumType="Bool" Default="False" CacheSuffix="vi" TargetShaders="all" Material="False" Condition="SupportViewInstancing">
+				<Overriding StateOverrideMethod="Blank">
+				</Overriding>
+				<Overriding StateOverrideMethod="Overwrite">
+					<GeometryShader />
+					<ViewInstancing Count="2" Type="SequentialRenderTarget"/>
+				</Overriding>
+			</Element>
+		</Permutation>
+		<Permutation>
+			<Element Name="PARTICLE_RENDER_SHAPE" EnableMacroName="PARTICLE_RENDER_SHAPE" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="rs" TargetShaders="vs|ps" Material="true"/>
+		</Permutation>
+		<Define Name="USE_HASHED_ALPHA" Value="1" CacheSuffix="ha" TargetShaders="vs|ps|gs" />
+		<Define Name="EFFECT_RENDER_MODE" Value="2" CacheSuffix="rm" TargetShaders="vs|ps|gs" />
+		<Define Name="IS_COMMON_EFFECT" Value="true" CacheSuffix="ce" TargetShaders="vs|ps|gs" />
+		<Define Name="IS_OPAQUE_SHADOW" Value="true" CacheSuffix="os" TargetShaders="vs|ps|gs" />
+		<VertexShader Filename="EffectMaterial.hlsl" EntryPoint="EffectSceneShadowVS" />
+		<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="PSEffectShadowOpaqueMain" />
+		<DepthState DepthFunc="LessEqual"/>
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="SHADOW_MATERIAL_IGNORED_BY_RAYTRACING" />
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="8" SlopeScaledDepthBias="2.0" MultisampleShadow="True"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="SceneEffectShadowBindless0" FrameBuffer="DynamicShadowBindless0" Condition="MultiDraw">
+	<Pipeline Pass="EffectMaterial" InputLayout="EffectVertex" Condition="MultiDraw&ConditionalVRS">
+		<Permutation>
+			<Element Name="PARTICLE_RENDER_SHAPE" EnableMacroName="PARTICLE_RENDER_SHAPE" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="rs" TargetShaders="vs|ps" Material="true"/>
+		</Permutation>
+		<Define Name="USE_HASHED_ALPHA" Value="1" CacheSuffix="ha" TargetShaders="vs|ps|gs" />
+		<Define Name="EFFECT_RENDER_MODE" Value="2" CacheSuffix="rm" TargetShaders="vs|ps|gs" />
+		<Define Name="IS_COMMON_EFFECT" Value="true" CacheSuffix="ce" TargetShaders="vs|ps|gs" />
+		<VertexShader Filename="EffectMaterial.hlsl" EntryPoint="EffectSceneShadowVS" />
+		<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="PSEffectShadowOpaqueMain" />
+		<DepthState DepthFunc="LessEqual"/>
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="SHADOW_MATERIAL_IGNORED_BY_RAYTRACING" />
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="8" SlopeScaledDepthBias="2.0" MultisampleShadow="True"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="SceneEffectShadowBindless1" FrameBuffer="DynamicShadowBindless1" Condition="MultiDraw">
+	<Pipeline Pass="EffectMaterial" InputLayout="EffectVertex" Condition="MultiDraw&ConditionalVRS">
+		<Permutation>
+			<Element Name="PARTICLE_RENDER_SHAPE" EnableMacroName="PARTICLE_RENDER_SHAPE" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="rs" TargetShaders="vs|ps" Material="true"/>
+		</Permutation>
+		<Define Name="USE_HASHED_ALPHA" Value="1" CacheSuffix="ha" TargetShaders="vs|ps|gs" />
+		<Define Name="EFFECT_RENDER_MODE" Value="2" CacheSuffix="rm" TargetShaders="vs|ps|gs" />
+		<Define Name="IS_COMMON_EFFECT" Value="true" CacheSuffix="ce" TargetShaders="vs|ps|gs" />
+		<VertexShader Filename="EffectMaterial.hlsl" EntryPoint="EffectSceneShadowVS" />
+		<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="PSEffectShadowOpaqueMain" />
+		<DepthState DepthFunc="LessEqual"/>
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="SHADOW_MATERIAL_IGNORED_BY_RAYTRACING" />
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="8" SlopeScaledDepthBias="2.0" MultisampleShadow="True"/>
+	</Pipeline>
+</RenderPass>
+
+
+<RenderPass Name="EffectDynamicShadowTranslucentBindless" FrameBuffer="DynamicShadowTranslucentBindless" ClearTarget="RenderTargets" ClearColor="1,1,1,1">
+	<Permutation>
+		<Element Name="ViewInstancing" EnableMacroName="VIEW_INSTANCING" EnumType="Bool" Default="False" CacheSuffix="vi" TargetShaders="all" Material="False" Condition="SupportViewInstancing">
+			<Overriding StateOverrideMethod="Blank">
+			</Overriding>
+			<Overriding StateOverrideMethod="Overwrite">
+				<GeometryShader />
+				<ViewInstancing Count="2" Type="SequentialRenderTarget"/>
+			</Overriding>
+		</Element>
+	</Permutation>
+
+	<Pipeline Pass="EffectMaterial" InputLayout="EffectVertex" Condition="MultiDraw&ConditionalVRS">
+		<Permutation>
+			<Element Name="PARTICLE_RENDER_SHAPE" EnableMacroName="PARTICLE_RENDER_SHAPE" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="rs" TargetShaders="vs|ps" Material="true"/>
+		</Permutation>
+		<Define Name="EFFECT_RENDER_MODE" Value="2" CacheSuffix="rm" TargetShaders="vs|ps|gs" />
+		<Define Name="IS_COMMON_EFFECT" Value="true" CacheSuffix="ce" TargetShaders="vs|ps|gs" />
+		<VertexShader Filename="EffectMaterial.hlsl" EntryPoint="EffectSceneShadowVS" />
+		<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="PSEffectShadowTranslucentMain" />
+		<DepthState DepthFunc="LessEqual" DepthWrite="False"/>
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="SHADOW_MATERIAL_IGNORED_BY_RAYTRACING" />
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="8" SlopeScaledDepthBias="2.0" ConservativeMode="False" MultisampleShadow="True"/>
+		<BlendState ColorWrite="RGB" AlphaBlend="Multiply"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="EffectDynamicShadowTranslucentBindless0" FrameBuffer="DynamicShadowTranslucentBindless0" ClearTarget="RenderTargets" ClearColor="1,1,1,1">
+	<Pipeline Pass="EffectMaterial" InputLayout="EffectVertex" Condition="MultiDraw&ConditionalVRS">
+		<Permutation>
+			<Element Name="PARTICLE_RENDER_SHAPE" EnableMacroName="PARTICLE_RENDER_SHAPE" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="rs" TargetShaders="vs|ps" Material="true"/>
+		</Permutation>
+		<Define Name="EFFECT_RENDER_MODE" Value="2" CacheSuffix="rm" TargetShaders="vs|ps|gs" />
+		<Define Name="IS_COMMON_EFFECT" Value="true" CacheSuffix="ce" TargetShaders="vs|ps|gs" />
+		<VertexShader Filename="EffectMaterial.hlsl" EntryPoint="EffectSceneShadowVS" />
+		<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="PSEffectShadowTranslucentMain" />
+		<DepthState DepthFunc="LessEqual" DepthWrite="False"/>
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="SHADOW_MATERIAL_IGNORED_BY_RAYTRACING" />
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="8" SlopeScaledDepthBias="2.0" ConservativeMode="False" MultisampleShadow="True"/>
+		<BlendState ColorWrite="RGB" AlphaBlend="Multiply"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="EffectDynamicShadowTranslucentBindless1" FrameBuffer="DynamicShadowTranslucentBindless1" ClearTarget="RenderTargets" ClearColor="1,1,1,1">
+	<Pipeline Pass="EffectMaterial" InputLayout="EffectVertex" Condition="MultiDraw&ConditionalVRS">
+		<Permutation>
+			<Element Name="PARTICLE_RENDER_SHAPE" EnableMacroName="PARTICLE_RENDER_SHAPE" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="rs" TargetShaders="vs|ps" Material="true"/>
+		</Permutation>
+		<Define Name="EFFECT_RENDER_MODE" Value="2" CacheSuffix="rm" TargetShaders="vs|ps|gs" />
+		<Define Name="IS_COMMON_EFFECT" Value="true" CacheSuffix="ce" TargetShaders="vs|ps|gs" />
+		<VertexShader Filename="EffectMaterial.hlsl" EntryPoint="EffectSceneShadowVS" />
+		<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="PSEffectShadowTranslucentMain" />
+		<DepthState DepthFunc="LessEqual" DepthWrite="False"/>
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="SHADOW_MATERIAL_IGNORED_BY_RAYTRACING" />
+		<CullMode Mode="None" />
+		<Rasterizer MultiSampleEnable="True" MultiSampleCount="8" SlopeScaledDepthBias="2.0" ConservativeMode="False" MultisampleShadow="True"/>
+		<BlendState ColorWrite="RGB" AlphaBlend="Multiply"/>
+	</Pipeline>
+</RenderPass>
+
+
+<RenderPass Name="RenderVolumetricRenderingFluid2D" FrameBuffer="SceneWindFluid2D">
+	<Pipeline Pass="EffectMaterial" InputLayout="EffectVertex" Condition="MultiDraw&ConditionalVRS">
+		<Permutation>
+			<Element Name="PARTICLE_RENDER_SHAPE" EnableMacroName="PARTICLE_RENDER_SHAPE" EnumType="Integer" Default="0" Count="2" Mutable="False" CacheSuffix="rs" TargetShaders="vs|ps" Material="true"/>
+		</Permutation>
+		<Define Name="IS_COMMON_EFFECT" Value="true" CacheSuffix="ce" TargetShaders="vs|ps" />
+		<Define Name="EFFECT_RENDER_MODE" Value="4" CacheSuffix="rm" TargetShaders="vs|ps" />
+		<Define Name="BLEND_MODE" Value="1" CacheSuffix="bm" TargetShaders="vs|ps" />
+		<Define Name="UNFILTERED_MODE" Value="1" />
+		<VertexShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_VS" />
+		<PixelShader Filename="EffectMaterial.hlsl" EntryPoint="RenderGPUParticles_Fluid2D_PS" />
+		<BlendState ColorWrite="RGBA" AlphaBlend="Additive_RGBA"/>
+		<BlendState1 ColorWrite="RG" AlphaBlend="Additive" />
+		<DepthState DepthEnable="False" DepthWrite="False" />
+		<StencilState StencilEnable="False" />
+		<CullMode Mode="None" />
+	</Pipeline>
+</RenderPass>

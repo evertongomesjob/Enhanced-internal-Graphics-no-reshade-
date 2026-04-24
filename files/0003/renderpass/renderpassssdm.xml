@@ -1,0 +1,670 @@
+﻿<FrameBuffer Name="ScreenSpaceDisplacementMappingFrameBufferBackground">
+	<GBufferBaseColorScreenSpaceTessellation/>
+	<GBufferNormalScreenSpaceTessellation/>
+	<MaterialIDScreenScpaceTessellation/>
+	<SceneDepth/>
+</FrameBuffer>
+
+<FrameBuffer Name="ScreenSpaceDisplacementMappingFrameBuffer">
+	<GBufferBaseColor/>
+	<GBufferNormal/>
+	<MaterialIDScreenScpaceTessellation/>
+	<Velocity/>
+	<GBufferCharacter/>
+	<SceneDepth/>
+</FrameBuffer>
+
+<FrameBuffer Name="ScreenSpaceDisplacementMappingTiledMask">
+	<SSDMTiledMask/>
+</FrameBuffer>
+
+<FrameBuffer Name="ScreenSpaceDisplacementMappingTessellationFrameBuffer">
+	<GBufferBaseColorScreenSpaceTessellation/>
+	<GBufferNormalScreenSpaceTessellation/>
+	<MaterialIDScreenScpaceTessellation/>
+	<VelocityScreenScpaceTessellation/>
+	<GBufferCharacterScreenScpaceTessellation/>
+	<SceneDepth/>
+</FrameBuffer>
+
+<FrameBuffer Name="ScreenSpaceDisplacementMappingTileFrameBuffer">
+	<GBufferBaseColorScreenSpaceTessellation/>
+	<GBufferNormalScreenSpaceTessellation/>
+	<MaterialIDScreenScpaceTessellation/>
+	<VelocityScreenScpaceTessellation/>
+	<GBufferCharacterScreenScpaceTessellation/>
+	<DepthScreenScpaceTessellation/>
+</FrameBuffer>
+
+<FrameBuffer Name="SSDMCopyBackFrameBufferBackground">
+	<GBufferBaseColor/>
+	<GBufferNormal/>
+	<SceneDepth/>
+</FrameBuffer>
+
+<FrameBuffer Name="SSDMCopyBackFrameBufferCharacter">
+	<GBufferBaseColor/>
+	<GBufferNormal/>
+	<Velocity/>
+	<GBufferCharacter/>
+	<SceneDepth/>
+</FrameBuffer>
+
+<FrameBuffer Name="CopyStencilSSDM">
+	<MaterialIDScreenScpaceTessellation/>
+	<DepthScreenScpaceTessellation/>
+</FrameBuffer>
+
+<FrameBuffer Name="SSDMDepthOnly">
+	<DepthScreenScpaceTessellation/>
+</FrameBuffer>
+
+<RenderPass Name="ScreenSpaceDisplacementMappingBackground" FrameBuffer="ScreenSpaceDisplacementMappingFrameBufferBackground" ClearTarget="RenderTargets">
+	<Pipeline Pass="SSDM_Background" >
+		<VertexShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_BackgroundPass_VS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_BackgroundPass_PS"/>
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="" />
+		<BlendState4 ColorWrite="" />
+		<InputElement Topology="TriangleStrip">
+			<VertexElement Element="Position" Format="R32_UINT" InputClass="Vertex"/>
+		</InputElement>
+	</Pipeline>
+
+	<Pipeline Pass="SSDM_Background_Reconstructor" InputLayout="FullScreenVertex">
+		<Define Name="SSDM_PASS" Value="0" CacheSuffix="sp" TargetShaders="ps"/>
+		<Define Name="IS_BACKGROUND_ONLY_PASS" Value="1" CacheSuffix="bop" TargetShaders="ps"/>
+		<Define Name="USE_SSDM_FAR_GRASS" Value="0" CacheSuffix="usfg" TargetShaders="all"/>
+		<Permutation>
+			<!--<Element Name="UseSSDMFarGrass" EnableMacroName="USE_SSDM_FAR_GRASS" EnumType="Bool" Default="False" CacheSuffix="usfg" TargetShaders="all" />-->
+			<Element Name="GenerateBehindReconstructMask" EnableMacroName="GENERATE_BEHIND_RECONSTRUCT_MASK" EnumType="Bool" Default="False" CacheSuffix="gbrm" TargetShaders="all" />
+		</Permutation>
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_ReconstructorPS"/>
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="" />
+		<BlendState4 ColorWrite="" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_SSDM_BACKGROUND"/>
+	</Pipeline>
+
+	<Pipeline Pass="SSDM_Background_DilateBehindMaterials" InputLayout="FullScreenVertex">
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_DilateBehindMaterialsCS" />
+	</Pipeline>
+
+	<Pipeline Pass="SSDM_Background_ReconstructBehindMaterials" InputLayout="FullScreenVertex">
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_ReconstructBehindMaterialsCS" />
+	</Pipeline>
+
+	<Pipeline Pass="SSDM_Background_FillHoles" InputLayout="FullScreenVertex">
+		<Define Name="SSDM_PASS" Value="0" CacheSuffix="sp" TargetShaders="ps"/>
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_FillHolesPS"/>
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="" />
+		<BlendState4 ColorWrite="" />
+		<DepthState DepthWrite="False" DepthEnable="False"/>
+		<StencilState StencilEnable="True" StencilFunc="NotEqual" ReadMaskName="MATERIAL_ID_MASK" PassOp="Keep" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_SSDM_BACKGROUND"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="ScreenSpaceDisplacementMapping" FrameBuffer="ScreenSpaceDisplacementMappingFrameBuffer" >
+	<Pipeline Pass="SSDM_Background" >
+		<VertexShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_BackgroundPass_VS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_BackgroundPass_PS"/>
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="" />
+		<InputElement Topology="TriangleStrip">
+			<VertexElement Element="Position" Format="R32_UINT" InputClass="Vertex"/>
+		</InputElement>
+	</Pipeline>
+
+	<Pipeline Pass="SSDM_Background_Reconstructor" InputLayout="FullScreenVertex">
+		<Define Name="SSDM_PASS" Value="0" CacheSuffix="sp" TargetShaders="ps"/>
+		<Define Name="USE_SSDM_FAR_GRASS" Value="0" CacheSuffix="usfg" TargetShaders="all"/>
+		<Permutation>
+			<!--<Element Name="UseSSDMFarGrass" EnableMacroName="USE_SSDM_FAR_GRASS" EnumType="Bool" Default="False" CacheSuffix="usfg" TargetShaders="all" />-->
+		</Permutation>
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_ReconstructorPS"/>
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="" />
+		<BlendState4 ColorWrite="" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_SSDM_BACKGROUND"/>
+	</Pipeline>
+
+	<Pipeline Pass="SSDM_Character" >
+		<VertexShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_CharacterPass_VS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_CharacterPass_PS"/>
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="RGBA" />
+		<InputElement Topology="TriangleStrip">
+			<VertexElement Element="Position" Format="R32_UINT" InputClass="Vertex"/>
+		</InputElement>
+	</Pipeline>
+
+	<Pipeline Pass="SSDM_Character_Reconstructor" InputLayout="FullScreenVertex">
+		<Define Name="SSDM_PASS" Value="1" CacheSuffix="sp" TargetShaders="ps"/>
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_ReconstructorPS"/>
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="RGBA" />
+		<BlendState4 ColorWrite="RGBA" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_SSDM_CHARACTER"/>
+	</Pipeline>
+
+	<Pipeline Pass="SSDMTileInstancing">
+		<VertexShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDMTileInstancingVS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_Background_TilePS"/>
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="" />
+		<InputElement Topology="TriangleStrip">
+			<VertexElement Element="Position" Format="R8_UINT" InputClass="Vertex"/>
+			<VertexElement Element="TexCoord0" Format="R32G32B32A32_FLOAT" InputClass="Instance"/>
+		</InputElement>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="ScreenSpaceDisplacementMappingTessellation" FrameBuffer="ScreenSpaceDisplacementMappingTessellationFrameBuffer" ClearTarget="Stencil">
+	<Pipeline Pass="SSDM_Background_Tessellation" >
+		<VertexShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_BackgroundPass_TessellationVS" />
+		<HullShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_BackgroundPass_TessellationHS" />
+		<DomainShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_BackgoundPass_TessellationDS" />
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_BackgroundPass_TessellationPS" />
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_SSDM_BACKGROUND"/>
+		<InputElement Topology="ControlPoint_4">
+			<VertexElement Element="Position" Format="R8_UINT" InputClass="Vertex" />
+		</InputElement>
+	</Pipeline>
+	<Pipeline Pass="SSDM_Background_Tessellation_Wireframe" >
+		<VertexShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_BackgroundPass_TessellationVS" />
+		<HullShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_BackgroundPass_TessellationHS" />
+		<DomainShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_BackgoundPass_TessellationDS" />
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_BackgroundPass_TessellationPS" />
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="" />
+		<FillMode Mode="Wireframe" />
+		<InputElement Topology="ControlPoint_4">
+			<VertexElement Element="Position" Format="R8_UINT" InputClass="Vertex" />
+		</InputElement>
+	</Pipeline>
+	<Pipeline Pass="SSDM_Character_Tessellation" >
+		<VertexShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_CharacterPass_TessellationVS" />
+		<HullShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_CharacterPass_TessellationHS" />
+		<DomainShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_CharacterPass_TessellationDS" />
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_CharacterPass_TessellationPS" />
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="RGBA" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_SSDM_CHARACTER"/>
+		<InputElement Topology="ControlPoint_4">
+			<VertexElement Element="Position" Format="R8_UINT" InputClass="Vertex" />
+		</InputElement>
+	</Pipeline>
+	<Pipeline Pass="SSDM_Character_Tessellation_Wireframe" >
+		<VertexShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_CharacterPass_TessellationVS" />
+		<HullShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_CharacterPass_TessellationHS" />
+		<DomainShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_CharacterPass_TessellationDS" />
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_CharacterPass_TessellationPS" />
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="RGBA" />
+		<FillMode Mode="Wireframe" />
+		<InputElement Topology="ControlPoint_4">
+			<VertexElement Element="Position" Format="R8_UINT" InputClass="Vertex" />
+		</InputElement>
+	</Pipeline>
+	<Pipeline Pass="SSDM_Character_Tessellation_Instancing" >
+		<VertexShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_CharacterPass_Tessellation_InstancingVS" />
+		<HullShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_CharacterPass_TessellationHS" />
+		<DomainShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_CharacterPass_TessellationDS" />
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_CharacterPass_TessellationPS" />
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="RGBA" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_SSDM_CHARACTER"/>
+		<InputElement Topology="ControlPoint_4">
+			<VertexElement Element="Position" Format="R8_UINT" InputClass="Vertex" />
+			<VertexElement Element="TexCoord0" Format="R32G32B32A32_FLOAT" InputClass="Instance" />
+		</InputElement>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="ScreenSpaceDisplacementMappingTile" FrameBuffer="ScreenSpaceDisplacementMappingFrameBufferBackground" ClearTarget="RenderTargets">
+	<Pipeline Pass="SSDM_Background_Tile">
+		<Define Name="SSDM_PASS" Value="0" CacheSuffix="sp" TargetShaders="all"/>
+		<Define Name="USE_SSDM_FAR_GRASS" Value="0" CacheSuffix="usfg" TargetShaders="all"/>
+		<Permutation>
+			<Element Name="ReorientDisplacedNormals" EnableMacroName="REORIENT_DISPLACED_NORMALS" EnumType="Bool" Default="True" CacheSuffix="rdn" TargetShaders="all" />
+			<!--<Element Name="UseSSDMFarGrass" EnableMacroName="USE_SSDM_FAR_GRASS" EnumType="Bool" Default="False" CacheSuffix="usfg" TargetShaders="all" />-->
+		</Permutation>
+		<VertexShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_Background_TileVS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_Background_TilePS"/>
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="" />
+		<BlendState4 ColorWrite="" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_SSDM_BACKGROUND"/>
+		<InputElement Topology="TriangleList">
+			<VertexElement Element="Position" Format="R8_UINT" InputClass="Vertex"/>
+		</InputElement>
+		<DepthState DepthWrite="True" DepthEnable="True" DepthFunc="GreaterEqual"/>
+	</Pipeline>
+
+	<Pipeline Pass="SSDM_Background_Strip">
+		<Define Name="SSDM_PASS" Value="0" CacheSuffix="sp" TargetShaders="all"/>
+		<Define Name="USE_SSDM_FAR_GRASS" Value="0" CacheSuffix="usfg" TargetShaders="all"/>
+		<Permutation>
+			<Element Name="UseHeightScale" EnableMacroName="USE_HEIGHT_SCALE" EnumType="Bool" Default="True" CacheSuffix="uhs" TargetShaders="all" />
+			<Element Name="ReorientDisplacedNormals" EnableMacroName="REORIENT_DISPLACED_NORMALS" EnumType="Bool" Default="True" CacheSuffix="rdn" TargetShaders="all" />
+			<Element Name="UseNoInterpolationLookup" EnableMacroName="USE_NO_INTERPOLATION_LOOKUP" EnumType="Bool" Default="True" CacheSuffix="uni" TargetShaders="all" />
+			<Element Name="ReprojectVertexNormalAndHeight" EnableMacroName="REPROJECT_VERTEX_NORMAL_AND_HEIGHT" EnumType="Bool" Default="False" CacheSuffix="rpvnh" TargetShaders="all" />
+			<Element Name="UseRayReconstruction" EnableMacroName="USE_RAY_RECONSTRUCTION" EnumType="Bool" Default="True" CacheSuffix="urr" TargetShaders="all" />
+			<!--<Element Name="UseSSDMFarGrass" EnableMacroName="USE_SSDM_FAR_GRASS" EnumType="Bool" Default="False" CacheSuffix="usfg" TargetShaders="all" />-->
+		</Permutation>
+		<VertexShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_Background_StripVS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_Background_TilePS"/>
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="" />
+		<BlendState4 ColorWrite="" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_SSDM_BACKGROUND"/>
+		<CullMode Mode="Front"/>
+		<InputElement Topology="TriangleStrip">
+			<VertexElement Element="Position" Format="R32_UINT" InputClass="Vertex"/>
+		</InputElement>
+		<DepthState DepthWrite="True" DepthEnable="True" DepthFunc="GreaterEqual"/>
+	</Pipeline>
+
+	<Pipeline Pass="SSDM_Background_Tile_MS" Condition="MeshShader&ConditionalTrinity">
+		<Define Name="SSDM_PASS" Value="0" CacheSuffix="sp" TargetShaders="all"/>
+		<Define Name="USE_SSDM_FAR_GRASS" Value="0" CacheSuffix="usfg" TargetShaders="all"/>
+		<Permutation>
+			<Element Name="UseHeightScale" EnableMacroName="USE_HEIGHT_SCALE" EnumType="Bool" Default="True" CacheSuffix="uhs" TargetShaders="all" />
+			<Element Name="ReorientDisplacedNormals" EnableMacroName="REORIENT_DISPLACED_NORMALS" EnumType="Bool" Default="True" CacheSuffix="rdn" TargetShaders="all" />
+			<Element Name="ReprojectVertexNormalAndHeight" EnableMacroName="REPROJECT_VERTEX_NORMAL_AND_HEIGHT" EnumType="Bool" Default="False" CacheSuffix="rpvnh" TargetShaders="all" />
+			<Element Name="UseRayReconstruction" EnableMacroName="USE_RAY_RECONSTRUCTION" EnumType="Bool" Default="True" CacheSuffix="urr" TargetShaders="all" />
+			<!--<Element Name="UseSSDMFarGrass" EnableMacroName="USE_SSDM_FAR_GRASS" EnumType="Bool" Default="False" CacheSuffix="usfg" TargetShaders="all" />-->
+		</Permutation>
+		<MeshShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_Common_TileMS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_Background_TilePS"/>
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="" />
+		<BlendState4 ColorWrite="" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_SSDM_BACKGROUND"/>
+		<DepthState DepthWrite="True" DepthEnable="True" DepthFunc="GreaterEqual"/>
+	</Pipeline>
+
+	<Pipeline Pass="SSDM_Background_FillHoles_DepthDisplacement" InputLayout="FullScreenVertex">
+		<Permutation>
+			<Element Name="GenerateBehindReconstructMask" EnableMacroName="GENERATE_BEHIND_RECONSTRUCT_MASK" EnumType="Bool" Default="False" CacheSuffix="gbrm" TargetShaders="all" />
+		</Permutation>
+		<Define Name="SSDM_PASS" Value="0" CacheSuffix="sp" TargetShaders="ps"/>
+		<VertexShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_FillHolesDepthDisplacementVS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_FillHolesDepthDisplacementPS"/>
+		<DepthState DepthWrite="True" DepthEnable="True" DepthFunc="GreaterEqual"/>
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="" />
+		<BlendState4 ColorWrite="" />
+	</Pipeline>
+
+	<Pipeline Pass="SSDM_Background_DilateBehindMaterials">
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_DilateBehindMaterialsCS" />
+	</Pipeline>
+
+	<Pipeline Pass="SSDM_Background_ReconstructBehindMaterials">
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_ReconstructBehindMaterialsCS" />
+	</Pipeline>
+
+	<Pipeline Pass="SSDM_Background_ReconstructBehindMaterialsPS" InputLayout="FullScreenVertex">
+		<Permutation>
+			<Element Name="UseHeightScale" EnableMacroName="USE_HEIGHT_SCALE" EnumType="Bool" Default="True" CacheSuffix="uhs" TargetShaders="all" />
+		</Permutation>
+		<VertexShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_ReconstructBehindMaterialsPS"/>
+		<DepthState DepthWrite="True" DepthEnable="True" DepthFunc="Always"/>
+		<BlendState ColorWrite="" />
+		<BlendState1 ColorWrite="" />
+		<BlendState2 ColorWrite="" />
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="ScreenSpaceDisplacementMappingTileCharacter" FrameBuffer="ScreenSpaceDisplacementMappingTileFrameBuffer">
+	<Pipeline Pass="SSDM_Character_Tile">
+		<Define Name="SSDM_PASS" Value="1" CacheSuffix="sp" TargetShaders="all"/>
+		<Permutation>
+			<Element Name="SSDMDirection" EnableMacroName="USE_CHARATER_SSDM_DIRECTION" EnumType="Bool" Default="False" CacheSuffix="csd" TargetShaders="all"/>
+		</Permutation>
+		<VertexShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_Character_TileVS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_Character_TilePS"/>
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="RGBA" />
+		<BlendState4 ColorWrite="RGBA" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_SSDM_CHARACTER"/>
+		<InputElement Topology="TriangleList">
+			<VertexElement Element="Position" Format="R8_UINT" InputClass="Vertex"/>
+		</InputElement>
+		<DepthState DepthWrite="True" DepthEnable="True" DepthFunc="GreaterEqual"/>
+	</Pipeline>
+
+	<Pipeline Pass="SSDM_Character_Strip">
+		<Define Name="SSDM_PASS" Value="1" CacheSuffix="sp" TargetShaders="all"/>
+		<Permutation>
+			<Element Name="SSDMDirection" EnableMacroName="USE_CHARATER_SSDM_DIRECTION" EnumType="Bool" Default="False" CacheSuffix="csd" TargetShaders="all"/>
+			<Element Name="UseNoInterpolationLookup" EnableMacroName="USE_NO_INTERPOLATION_LOOKUP" EnumType="Bool" Default="False" CacheSuffix="uni" TargetShaders="all" />
+		</Permutation>
+		<VertexShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_Character_StripVS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_Character_TilePS"/>
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="RGBA" />
+		<BlendState4 ColorWrite="RGBA" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_SSDM_CHARACTER"/>
+		<CullMode Mode="Front"/>
+		<InputElement Topology="TriangleStrip">
+			<VertexElement Element="Position" Format="R32_UINT" InputClass="Vertex"/>
+		</InputElement>
+		<DepthState DepthWrite="True" DepthEnable="True" DepthFunc="GreaterEqual"/>
+	</Pipeline>
+
+	<Pipeline Pass="SSDM_Character_Tile_MS" Condition="MeshShader&ConditionalTrinity">
+		<Define Name="SSDM_PASS" Value="1" CacheSuffix="sp" TargetShaders="all"/>
+		<Permutation>
+			<Element Name="SSDMDirection" EnableMacroName="USE_CHARATER_SSDM_DIRECTION" EnumType="Bool" Default="False" CacheSuffix="csd" TargetShaders="all"/>
+		</Permutation>
+		<MeshShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_Common_TileMS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_Character_TilePS"/>
+		<BlendState ColorWrite="RGBA" />
+		<BlendState1 ColorWrite="RGBA" />
+		<BlendState2 ColorWrite="RGBA" />
+		<BlendState3 ColorWrite="RGBA" />
+		<BlendState4 ColorWrite="RGBA" />
+		<StencilState StencilEnable="True" StencilFunc="Always" PassOp="Replace" FailOp="Keep" DepthFailOp="Keep" StencilRefName="MATERIAL_ID_SSDM_CHARACTER"/>
+		<DepthState DepthWrite="True" DepthEnable="True" DepthFunc="GreaterEqual"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="CopySceneDepthToSSDMDepth" FrameBuffer="SSDMDepthOnly" ClearTarget="Stencil">
+	<Pipeline Pass="CopySceneDepthToSSDMDepth" InputLayout="FullScreenVertex">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="CopySceneDepthToSSDMDepthPS"/>
+		<DepthState DepthWrite="True" DepthEnable="True" DepthFunc="Always"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="CopyBackSceneDepth" FrameBuffer="SceneDepth">
+	<Pipeline Pass="CopyBackSceneDepth" InputLayout="FullScreenVertex">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="CopyBackSceneDepthPS"/>
+		<DepthState DepthWrite="True" DepthEnable="True" DepthFunc="GreaterEqual"/>
+	</Pipeline>
+</RenderPass>
+
+
+<!--<FrameBuffer Name="GBufferDeferredTexturingScreenSpaceTessellation">-->
+    <!-- <TextureCoordHalfMS/> -->
+<!-- <VertexNormalHalfMS/>
+    <TextureIDHalf/>
+    <SceneDepthHalf/>  
+</FrameBuffer>
+
+<RenderPass Name="ScreenSpaceTessellationMultisample" FrameBuffer="GBufferDeferredTexturingScreenSpaceTessellation" >
+  <Pipeline Pass="DisplacementMapping" >
+    <VertexShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="ScreenSpaceTessellationMultisampleVS"/>
+    <PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="ScreenSpaceTessellationMultisamplePS"/>
+    <InputElement Topology="TriangleStrip">
+      <VertexElement Element="Position" Format="R32_UINT" InputClass="Vertex"/>
+    </InputElement>
+    <Rasterizer MultiSampleEnable="True" MultiSampleCount="4" />
+    <CullMode Mode="None"/>
+  </Pipeline>-->
+
+  <!--<Pipeline Pass="DisplacementMapping_SecondPass" >
+    <VertexShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="ScreenSpaceSecondPassVS"/>
+    <PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="ScreenSpaceSecondPassPS"/>
+    <InputElement Topology="TriangleStrip">
+      <VertexElement Element="Position" Format="R32_UINT" InputClass="Vertex"/>
+    </InputElement>
+  </Pipeline>-->
+<!--</RenderPass>-->
+
+<FrameBuffer Name="SSDMFrameBuffer">
+  <SSDMTextureCoordinate/>
+  <SceneDepth/>
+</FrameBuffer>
+
+<RenderPass Name="ScreenSpaceDisplacementMappingTextrueCoordinate" FrameBuffer="SSDMFrameBuffer" ClearTarget="RenderTargets">
+  <Pipeline Pass="DisplacementMapping" >
+    <VertexShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_TextureCoordinate_VS"/>
+    <PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_TextureCoordinate_PS"/>
+    <InputElement Topology="TriangleStrip">
+      <VertexElement Element="Position" Format="R32_UINT" InputClass="Vertex"/>
+    </InputElement>
+  </Pipeline> 
+
+  <!--<Pipeline Pass="DisplacementMappingCharacterPass" >
+    <VertexShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="ScreenSpaceSecondPassVS"/>
+    <PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="ScreenSpaceSecondPassPS"/>
+    <InputElement Topology="TriangleStrip">
+      <VertexElement Element="Position" Format="R32_UINT" InputClass="Vertex"/>
+    </InputElement>
+  </Pipeline>-->
+</RenderPass>
+
+<!--<RenderPass Name="ScreenSpaceDisplacementMappingResolve" FrameBuffer="SSDMFrameBuffer" >  
+  <Pipeline Pass="Resolve" InputLayout="FullScreenVertex">
+    <VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+    <PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SSDM_Resolve_PS"/>
+  </Pipeline>
+</RenderPass>-->
+
+<FrameBuffer Name="CopyStencilFrameBuffer">
+	<MaterialIDScreenScpaceTessellation/>
+</FrameBuffer>
+
+<RenderPass Name="CopyStencil" FrameBuffer="CopyStencilFrameBuffer" ClearTarget="All">
+	<Pipeline Pass="CopyStencilPass" InputLayout="FullScreenVertex">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS" />
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="CopyStencilPS"/>
+		<DepthState DepthWrite="False" DepthEnable="False"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="CopyEffectMaterialID">
+	<Pipeline Pass="CopyEffectMaterialIDPass">
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="CopyEffectMaterialID_CS" />
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="ScreenSpaceDisplacementMappingCopyBackBackground" FrameBuffer="SSDMCopyBackFrameBufferBackground">
+	<Pipeline Pass="CopySSDMToGbufferBackground" InputLayout="FullScreenVertex">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="CopySSDMToGbufferBackgroundPS"/>
+		<DepthState DepthWrite="False" DepthEnable="False"/>
+		<StencilState StencilEnable="True" StencilFunc="Equal" ReadMaskName="MATERIAL_ID_MASK" WriteMask="0" StencilRefName="MATERIAL_ID_SSDM_BACKGROUND"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="ScreenSpaceDisplacementMappingCopyBackCharacter" FrameBuffer="SSDMCopyBackFrameBufferCharacter">
+	<Pipeline Pass="CopySSDMToGbufferCharacter" InputLayout="FullScreenVertex">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="CopySSDMToGbufferCharacterPS"/>
+		<DepthState DepthWrite="False" DepthEnable="False"/>
+		<StencilState StencilEnable="True" StencilFunc="Equal" ReadMaskName="MATERIAL_ID_MASK" WriteMask="0" StencilRefName="MATERIAL_ID_SSDM_CHARACTER"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="ScreenSpaceDisplacementMappingCopyBack" FrameBuffer="SSDMCopyBackFrameBufferCharacter">
+	<Pipeline Pass="CopyBackgroundSSDMToGbuffer" InputLayout="FullScreenVertex">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="CopyBackgroundSSDMToGbufferPS"/>
+		<DepthState DepthWrite="False" DepthEnable="False"/>
+		<BlendState2 ColorWrite="" />
+		<BlendState3 ColorWrite="" />
+	</Pipeline>
+
+	<Pipeline Pass="CopyCharacterSSDMToGbuffer" InputLayout="FullScreenVertex">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="CopyCharacterSSDMToGbufferPS"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="CopyStencilSSDM" FrameBuffer="CopyStencilSSDM" >
+	<Pipeline Pass="CopyStencilBackground" InputLayout="FullScreenVertex">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="CopyStencilSSDMBackgroundPS"/>
+		<DepthState DepthWrite="False" DepthEnable="False"/>
+		<StencilState StencilEnable="True" StencilFunc="NotEqual" ReadMaskName="MATERIAL_ID_MASK" WriteMask="0" StencilRefName="MATERIAL_ID_SSDM_BACKGROUND"/>
+	</Pipeline>
+	<Pipeline Pass="CopyStencilCharacter" InputLayout="FullScreenVertex">
+		<VertexShader Filename="ScreenSpaceCommon.hlsl" EntryPoint="FullScreenVS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="CopyStencilSSDMCharacterPS"/>
+		<DepthState DepthWrite="False" DepthEnable="False"/>
+		<StencilState StencilEnable="True" StencilFunc="NotEqual" ReadMaskName="MATERIAL_ID_MASK" WriteMask="0" StencilRefName="MATERIAL_ID_SSDM_CHARACTER"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="ScreenSpaceDisplacementMappingInstancing" >
+	<Pipeline Pass="ResetCounterBuffer" >
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="ResetCounterBufferCS" />
+	</Pipeline>
+
+	<Pipeline Pass="GenerateTiledMask" >
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="GenerateMaskTextureCS" />
+	</Pipeline>
+
+	<Pipeline Pass="ClearInstancingBuffer" >
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="ClearInstancingBufferCS" />
+	</Pipeline>
+
+	<Pipeline Pass="GenerateInstancingBuffer" >    
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="GenerateInstancingBufferCS" />
+	</Pipeline>
+
+	<Pipeline Pass="GenerateIndirectCommand" Condition="IndirectCommand">
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="GenerateIndirectCommandCS" />
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="ScreenSpaceDisplacementMappingRasterizer" >
+	<Pipeline Pass="ResetCounterBuffer" >
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="ResetCounterBufferCS" />
+	</Pipeline>
+
+	<Pipeline Pass="ClearRasterizerBuffer" >
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="ClearRasterizerBufferCS" />
+	</Pipeline>
+
+	<Pipeline Pass="SSDM_Background_SoftwareRasterizer" >
+		<Define Name="SSDM_PASS" Value="0" CacheSuffix="sp" TargetShaders="cs"/>
+		<Define Name="IS_SOFTWARE_RASTERIZER" Value="1" CacheSuffix="sr" TargetShaders="cs"/>
+		<Define Name="USE_SSDM_FAR_GRASS" Value="0" CacheSuffix="usfg" TargetShaders="all"/>
+		<Permutation>
+			<!--<Element Name="UseSSDMFarGrass" EnableMacroName="USE_SSDM_FAR_GRASS" EnumType="Bool" Default="False" CacheSuffix="usfg" TargetShaders="all" />-->
+			<Element Name="CopyGBuffers" EnableMacroName="COPY_GBUFFERS" EnumType="Bool" Default="False" CacheSuffix="cgb" TargetShaders="cs" />
+			<Element Name="CalcHalf" EnableMacroName="CALC_HALF" EnumType="Bool" Default="True" CacheSuffix="cch" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SoftwareRasterizerSSDMCS" />
+	</Pipeline>
+
+	<Pipeline Pass="SSDM_Character_SoftwareRasterizer" >
+		<Define Name="SSDM_PASS" Value="1" CacheSuffix="sp" TargetShaders="cs"/>
+		<Define Name="IS_SOFTWARE_RASTERIZER" Value="1" CacheSuffix="sr" TargetShaders="cs"/>
+		<Permutation>
+			<Element Name="SSDMDirection" EnableMacroName="USE_CHARATER_SSDM_DIRECTION" EnumType="Bool" Default="False" CacheSuffix="csd" TargetShaders="all"/>
+			<Element Name="CalcHalf" EnableMacroName="CALC_HALF" EnumType="Bool" Default="True" CacheSuffix="cch" TargetShaders="cs" />
+		</Permutation>
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="SoftwareRasterizerSSDMCS" />
+	</Pipeline>
+
+	<Pipeline Pass="GenerateIndirectCommandHardwareRasterizer" >
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="GenerateIndirectCommandHardwareRasterizerCS" />
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="HardwareRasterizeTriangle" FrameBuffer="SSDMDepthOnly" Condition="MeshShader">
+	<!--<Define Name="XBOX" Value="1" CacheSuffix="xb" TargetShaders="all" Condition="Xbox"/>-->
+	<Pipeline Pass="SSDM_Background_HardwareRasterizeTriangle">
+		<Define Name="SSDM_PASS" Value="0" CacheSuffix="sp" TargetShaders="all"/>
+		<Define Name="USE_SSDM_FAR_GRASS" Value="0" CacheSuffix="usfg" TargetShaders="all"/>
+		<Permutation>
+			<!--<Element Name="UseSSDMFarGrass" EnableMacroName="USE_SSDM_FAR_GRASS" EnumType="Bool" Default="False" CacheSuffix="usfg" TargetShaders="all" />-->
+		</Permutation>
+		<MeshShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="HardwareRasterizeTriangleMS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="HardwareRasterizeTrianglePS"/>
+		<DepthState DepthWrite="False" DepthEnable="False"/>
+	</Pipeline>
+
+	<Pipeline Pass="SSDM_Character_HardwareRasterizeTriangle" >
+		<Define Name="SSDM_PASS" Value="1" CacheSuffix="sp" TargetShaders="all"/>
+		<Permutation>
+			<Element Name="SSDMDirection" EnableMacroName="USE_CHARATER_SSDM_DIRECTION" EnumType="Bool" Default="False" CacheSuffix="csd" TargetShaders="all"/>
+		</Permutation>
+		<MeshShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="HardwareRasterizeTriangleMS"/>
+		<PixelShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="HardwareRasterizeTrianglePS"/>
+		<DepthState DepthWrite="False" DepthEnable="False"/>
+	</Pipeline>
+</RenderPass>
+
+<RenderPass Name="ScreenSpaceDisplacementMappingTileMask" >
+	<Pipeline Pass="GenerateTileMaskBackground" >
+		<Permutation>
+			<Element Name="IsTiledCS" EnableMacroName="IS_TILED" EnumType="Bool" Default="True" CacheSuffix="tile" TargetShaders="cs" />
+		</Permutation>
+		<Define Name="SSDM_PASS" Value="0" CacheSuffix="sp" TargetShaders="cs"/>
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="GenerateTileMaskCS" />
+	</Pipeline>
+
+	<Pipeline Pass="GenerateTileMaskCharacter" >
+		<Permutation>
+			<Element Name="IsTiledCS" EnableMacroName="IS_TILED" EnumType="Bool" Default="True" CacheSuffix="tile" TargetShaders="cs" />
+		</Permutation>
+		<Define Name="SSDM_PASS" Value="1" CacheSuffix="sp" TargetShaders="cs"/>
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="GenerateTileMaskCS" />
+	</Pipeline>
+
+	<Pipeline Pass="ResetCounterBuffer" >
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="ResetCounterBufferCS" />
+	</Pipeline>
+
+	<Pipeline Pass="GenerateCharacterTilesBuffer" >
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="GenerateCharacterTilesBufferCS" />
+	</Pipeline>
+
+	<Pipeline Pass="GenerateIndirectCommandCharacterTiles" >
+		<ComputeShader Filename="ScreenSpaceTessellation.hlsl" EntryPoint="GenerateIndirectCommandCharacterTilesCS" />
+	</Pipeline>
+</RenderPass>
