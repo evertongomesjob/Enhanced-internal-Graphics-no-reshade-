@@ -2,10 +2,10 @@
 
 ## v3.0.0 (2026)
 
-- **Compatibilidade pós-atualização do jogo:** o `renderpassshadow.xml` do mod original (Nexus) era de uma build antiga: ao substituir o ficheiro completo, o jogo podia *crashar* ao arranque. A v3 usa o ficheiro **atual** extraído de `Crimson Desert\0003\0.paz` e aplica só os ajustes de qualidade de sombra (amostras MS e bias) alinhados ao intuito do mod antigo.
-- Inclui os outros passes gráficos testados (pós-processo, GI, RT, filtro, efeitos, atmosfera, SSDM) a partir do pacote v2.1 do autor, **sem** os ficheiros de núcleo `renderpass.xml` / `rendererconfiguration.xml` / `featuresandextensions.xml` (mantêm o vanilla no `0.paz`).
-- Guia e script de manutenção em `tools/` para repetir o merge após futuros patches.
+- **Post-update compatibility:** the original mod’s (Nexus) `renderpassshadow.xml` targeted an old build; replacing the file wholesale could **crash** on launch. v3 uses the **current** file extracted from `Crimson Desert\0003\0.paz` and applies only the shadow quality boosts (MS samples and depth bias) matching the old mod’s intent.
+- Includes the other vetted pass files (post-process, GI, RT, filter, effects, atmosphere, SSDM) from the author’s v2.1 pack, **without** the core `renderpass.xml` / `rendererconfiguration.xml` / `featuresandextensions.xml` (vanilla in `0.paz` stays authoritative there).
+- Maintenance guide and script under `tools/` to re-run the merge after future patches.
 
-**Mod de referência (autor):** [Crimson Desert – Nexus Mods 651](https://www.nexusmods.com/crimsondesert/mods/651?tab=description) — a v3 é um *fork/fix*; crédito ao autor original.
+**Original mod (author):** [Crimson Desert — Nexus Mods 651](https://www.nexusmods.com/crimsondesert/mods/651?tab=description) — v3 is a **fork/fix**; credit the original author.
 
-**Repositório do fix:** [evertongomesjob/Enhanced-internal-Graphics-no-reshade-](https://github.com/evertongomesjob/Enhanced-internal-Graphics-no-reshade-)
+**Fix repository:** [evertongomesjob/Enhanced-internal-Graphics-no-reshade-](https://github.com/evertongomesjob/Enhanced-internal-Graphics-no-reshade-)

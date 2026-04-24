@@ -1,14 +1,14 @@
 # Enhanced internal Graphics (no ReShade) — **v3.0.0 fix**
 
-**EN (short):** Community fix for the internal graphics XML mod after a **game update**. The original full `renderpassshadow.xml` from older builds **crashes** the current client. v3 keeps **current** engine data and only applies the **shadow quality** tweaks + the other safe pass files. **Not** a ReShade preset.
+Community fix for the **internal graphics XML** mod after a **game update**. The original full `renderpassshadow.xml` from older builds can **crash** the current client. v3 keeps **up-to-date** engine data and only applies the **shadow quality** tweaks plus the other safe pass files. This is **not** a ReShade preset.
 
-**Mod original (autor):** [Nexus Mods — Crimson Desert mod 651](https://www.nexusmods.com/crimsondesert/mods/651?tab=description) — este repositório é um **fork/fix**; créditos ao autor do pacote base.
+**Original mod (author):** [Nexus Mods — Crimson Desert mod 651](https://www.nexusmods.com/crimsondesert/mods/651?tab=description) — this repo is a **fork/fix**; credit goes to the original pack author.
 
-**Repo:** [github.com/evertongomesjob/Enhanced-internal-Graphics-no-reshade-](https://github.com/evertongomesjob/Enhanced-internal-Graphics-no-reshade-)
+**Repository:** [github.com/evertongomesjob/Enhanced-internal-Graphics-no-reshade-](https://github.com/evertongomesjob/Enhanced-internal-Graphics-no-reshade-)
 
 ---
 
-## Conteúdo (mesma árvore que o mod original)
+## Contents (same tree as the original mod)
 
 ```
 files/
@@ -24,71 +24,71 @@ files/
       renderpassraytracing.xml
 ```
 
-Instala no mod manager como **mod RAW** de ficheiros (pasta `files` na raiz do mod), tal como o pacote original.
+Install through your mod manager as a **file-based (RAW) mod** with a `files` folder at the mod root, like the original package.
 
 ---
 
-## Como usar (jogador)
+## How to use (players)
 
-1. Faz **backup** do perfil de mods / desactiva outros mods gráficos que touquem nos mesmos XMLs.
-2. Coloca esta pasta no directório de mods do **Crimson / mod manager** que usas (o caminho depende da ferramenta).
-3. **Activa só este mod** (ou resolve conflitos se outro mod editar os mesmos ficheiros).
-4. Se o jogo actualizar de novo: vê a secção “Após um patch do jogo” abaixo.
-
----
-
-## O que estava a falhar (e como foi resolvido)
-
-### Sintoma
-
-- Com o **pacote completo antigo** (v2.x do Nexus), o jogo podia **nem abrir** — crash no arranque após uma **atualização** do cliente.
-
-### Causa técnica (resumida)
-
-- Muitos dados de renderização estão dentro de `Crimson Desert\0003\0.paz` (não são ficheiros soltos na pasta do jogo).
-- O ficheiro **`renderpassshadow.xml` completo** do mod era de uma **build antiga**: faltavam ou sobravam **passes**, **condições** e **atributos** que o motor **actual** espera. Carregar o XML antigo = estado inválido = crash.
-- O resto do mod (pós-processo, etc.) em muitos casos continua **compatível** por ficheiro; o **shadow** era o que mais “partia” com o ficheiro inteiro trocado.
-
-### Solução da v3
-
-1. **Extrair** o `renderpassshadow.xml` **oficial** do teu jogo a partir de `0003\0.pam` + `0.paz` (ver ferramenta abaixo).
-2. Aplicar **só** o “reforço” de sombras no espírito do mod clássico: sobretudo `MultiSampleCount` mais alto e `SlopeScaledDepthBias` alinhado ao que o mod antigo fazia, **sem** apagar o que o patch novo acrescentou (passes novos, nomes de elementos, `Condition` por plataforma, etc.).
-3. Manter os **outros 7** XMLs do mod original nessa árvore, que na prática se mostraram **estáveis** com o cliente actual — **sem** forçar de volta o `renderpass.xml` / `rendererconfiguration.xml` / `featuresandextensions.xml` completos (isso voltaria a levantar o risco de crash).
-
-Ferramenta de extração usada na validação: **[CD.PAZ.Tool (Ekey)](https://github.com/Ekey/CD.PAZ.Tool)** — `CD.Unpacker` com o caminho do `0.pamt`.
-
-Script de re-merge para maintainers: `tools/merge_renderpassshadow_from_vanilla.py` (lê o vanilla, escreve o ficheiro a usar no mod).
+1. **Back up** your mod profile and disable other graphics mods that override the same XMLs.
+2. Drop this folder into your **Crimson mod manager** mod directory (path depends on the tool you use).
+3. **Enable this mod** (or resolve conflicts if another mod touches the same files).
+4. After a future game update, see “After a game patch” below.
 
 ---
 
-## Após um patch do jogo (manutenção)
+## What broke and how v3 fixes it
 
-1. Verifica ficheiros do jogo / actualiza o cliente.
-2. Extrai de novo o `renderpass/renderpassshadow.xml` de `0003` do jogo.
-3. Corre:
+### Symptom
+
+- With the **old full pack** (v2.x on Nexus), the game could **fail to start** — crash on launch after a **client update**.
+
+### Technical cause (short)
+
+- A lot of render data lives inside `Crimson Desert\0003\0.paz` (not loose files in the game folder).
+- The mod’s full **`renderpassshadow.xml`** came from an **old build**: **missing or extra** passes, **conditions**, and **attributes** that the **current** engine expects. Loading the old XML = invalid state = crash.
+- Other parts of the mod (post-process, etc.) are often still **per-file compatible**; **shadow** was the worst offender when the entire file was replaced.
+
+### v3 approach
+
+1. **Extract** the **official** `renderpassshadow.xml` from your game under `0003\0.pamt` / `0.paz` (see tool below).
+2. Apply only the **shadow “boost”** in the spirit of the classic mod: higher `MultiSampleCount` and `SlopeScaledDepthBias` aligned with the old mod, **without** stripping what a new patch added (new passes, element names, platform `Condition`, etc.).
+3. Keep the **other seven** XMLs from the original mod in that tree; they have been **stable** on current clients — we do **not** ship full `renderpass.xml` / `rendererconfiguration.xml` / `featuresandextensions.xml` (that would raise crash risk again).
+
+Extraction tool used for validation: **[CD.PAZ.Tool (Ekey)](https://github.com/Ekey/CD.PAZ.Tool)** — run `CD.Unpacker` on `0.pamt`.
+
+Maintainer re-merge script: `tools/merge_renderpassshadow_from_vanilla.py` (reads vanilla, writes the mod’s `renderpassshadow.xml`).
+
+---
+
+## After a game patch (maintenance)
+
+1. Verify game files / update the client.
+2. Extract `renderpass/renderpassshadow.xml` from the game’s `0003` again.
+3. Run:
 
    ```text
-   python tools/merge_renderpassshadow_from_vanilla.py --input "...\renderpassshadow.xml" --output "files\0003\renderpass\renderpassshadow.xml"
+   python tools/merge_renderpassshadow_from_vanilla.py --input "path\to\renderpassshadow.xml" --output "files\0003\renderpass\renderpassshadow.xml"
    ```
 
-4. Se **algum** dos outros 7 XMLs deixar de funcionar, volta a isolar o culpado (desactiva um a um) e abre *issue* neste repositório com a tua build.
+4. If **any** of the other seven XMLs breaks, binary-search which file (disable one at a time) and open an **issue** with your build.
 
-Se as linhas do vanilla **mudarem** ligeiramente (espaços, novos biases), podes ter de ajustar as *strings* em `REPLACEMENTS` no script — é normal após rewrites da Pearl Abyss.
-
----
-
-## Créditos e licença de conteúdo
-
-- **Mod gráfico base (autor original):** [Nexus — mod 651](https://www.nexusmods.com/crimsondesert/mods/651?tab=description) — cumpre a licença / termos do Nexus e do autor se redistribuíres ficheiros derivados.
-- **Fix v3 / documentação / script de merge:** mantenedor deste repositório; o código do script pode ser reutilizado livremente para o mesmo fim.
-- **Extração PAZ:** [Ekey / CD.PAZ.Tool](https://github.com/Ekey/CD.PAZ.Tool)
-- O jogo **Crimson Desert** e os activos originais pertencem à **Pearl Abyss**; este repositório **não** contém ficheiros do jogo, apenas XMLs de *override* de mods.
+If vanilla line formatting **changes** slightly (whitespace, new bias values), you may need to update the `REPLACEMENTS` strings in the script — normal after Pearl Abyss engine updates.
 
 ---
 
-## Subir o v3 para o GitHub (para quem clonou vazio o repo)
+## Credits and redistribution
 
-No PC, a partir desta pasta (ou onde a copiaste):
+- **Base graphics mod (original author):** [Nexus — mod 651](https://www.nexusmods.com/crimsondesert/mods/651?tab=description) — respect Nexus and the author’s license if you redistribute derivatives.
+- **v3 fix / docs / merge script:** this repository’s maintainer; the script may be reused for the same purpose.
+- **PAZ extraction:** [Ekey / CD.PAZ.Tool](https://github.com/Ekey/CD.PAZ.Tool)
+- **Crimson Desert** and its assets are owned by **Pearl Abyss**; this repo does **not** ship game files—only mod override XMLs.
+
+---
+
+## First-time publish (empty remote)
+
+From this folder (or a copy):
 
 ```bash
 cd Enhanced-internal-Graphics-no-reshade
@@ -100,10 +100,10 @@ git remote add origin https://github.com/evertongomesjob/Enhanced-internal-Graph
 git push -u origin main
 ```
 
-**Release no GitHub:** *Releases → Create a new release → Tag* `v3.0.0` *→ anexa um ZIP* com a pasta (ou só `files` + `README`, conforme preferires partilhar).
+**GitHub Release:** *Releases → Create a new release* → tag **`v3.0.0`** → attach a ZIP of the mod folder (or `files` + `README` only) if you prefer.
 
 ---
 
-## Aviso
+## Disclaimer
 
-Mods podem ser desactualizados por patches; testa com conta / save de backup. Este pacote **não** é suporte oficial da Pearl Abyss.
+Mods can break on patches; test with a backup save. This is **not** official support from Pearl Abyss.
